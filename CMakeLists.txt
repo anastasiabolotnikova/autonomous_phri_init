@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(PROJECT_NAME PepperFSMController)
+set(PROJECT_NAME PepperFSMController_RO-MAN2020)
 
 project(${PROJECT_NAME} CXX)
 

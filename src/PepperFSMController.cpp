@@ -40,7 +40,7 @@ PepperFSMController::PepperFSMController(mc_rbdyn::RobotModulePtr rm, double dt,
 
   // Load entire controller configuration file
   config_.load(config);
-  mc_rtc::log::success("PepperFSMController init done");
+  mc_rtc::log::success("PepperFSMController_RO-MAN2020 init done");
 }
 
 bool PepperFSMController::run()
