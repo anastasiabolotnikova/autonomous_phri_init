@@ -38,6 +38,12 @@ PepperFSMController::PepperFSMController(mc_rbdyn::RobotModulePtr rm, double dt,
     comTaskConf.add("type", "com_relative_body");
   }
 
+  // Camera optical frame name
+  if(!config.has("camOpticalFrame")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("PepperFSMController | camOpticalFrame config entry missing");
+  }
+  config("camOpticalFrame", camOpticalFrame_);
+
   // Load entire controller configuration file
   config_.load(config);
   mc_rtc::log::success("PepperFSMController_RO-MAN2020 init done");

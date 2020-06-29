@@ -28,6 +28,8 @@ struct PepperFSMController_DLLAPI PepperFSMController : public mc_control::fsm::
     std::string tabletDeviceName() { return tabletDeviceName_; }
     std::vector<std::string> bumperSensorNames() { return bumperSensorNames_; }
 
+    std::string camOpticalFrame() { return camOpticalFrame_; }
+
 private:
     // Controller configuration
     mc_rtc::Configuration config_;
@@ -49,4 +51,7 @@ private:
     std::string speakerDeviceName_ = "";
     std::string tabletDeviceName_ = "";
     std::vector<std::string> bumperSensorNames_ = {};
+
+    // Camera optical frame name
+    std::string camOpticalFrame_ = "";
 };

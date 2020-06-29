@@ -124,6 +124,36 @@ configs:
   StandStraight:
     postureTaskCompletion: 0.7
 
+  IntentCommunication:
+    rightHandPointing:
+      RShoulderPitch: [1.0]
+      RShoulderRoll: [-0.85]
+      RElbowYaw: [0.5]
+      RElbowRoll: [1.56]
+      RWristYaw: [1.8]
+    finalrightArmPosition:
+      RShoulderPitch: [1.57]
+      RShoulderRoll: [-0.17]
+      RElbowYaw: [1.22]
+      RElbowRoll: [0.52]
+      RWristYaw: [0.0]
+    ibvsTask:
+      type: gaze
+      body: kinect_depth_optical_frame
+      weight: 10.0
+      stiffness: 3.0
+      activeJoints:
+        - HeadYaw
+        - HeadPitch
+    timeOut: 10.0 #s
+    rightGripperOpening: 0.8
+    monitorHeadOrientation: true
+    headToTabletAngleThreshold: 1.0 #rad
+    spinRate: 30 #fps
+    imageToDisplay: backContactPlan.png
+    textToSayStart: 'Hello. My name is Pepper. I am here to help. Please look at my screen'
+    textToSayEnd: 'I will now carefully touch your back as is shown on my screen. Are you ready?'
+
 # Transitions map
 transitions:
 - [StandStraight, OK, HalfSitting, Strict]
@@ -172,3 +202,7 @@ comTask:
   weight: 10000.0
   stiffness: 3.0
 comPlot: true
+
+# Name of the camera optical frame (in URDF)
+camOpticalFrame: kinect_depth_optical_frame
+
