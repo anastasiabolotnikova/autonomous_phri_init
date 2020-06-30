@@ -124,6 +124,28 @@ configs:
   StandStraight:
     postureTaskCompletion: 0.7
 
+  NavigateToHuman:
+    mobileBasePBVSTask:
+      type: pbvs
+      surface: MobileBase
+      weight: 100.0
+      stiffness: 3.0
+      dimWeight: [0.0, 0.0, 1.0, 1.0, 1.0, 0.0]
+    pbvsTaskCompletion: 0.05
+    targetXMarker: [0.0, 0.15, -0.4]
+    visionLost: 30 # control iterations
+    ibvsTask:
+      type: gaze
+      body: kinect_depth_optical_frame
+      weight: 10.0
+      stiffness: 3.0
+      activeJoints:
+        - HeadYaw
+        - HeadPitch
+    rosRate: 30.0 # fps
+    rosTopic: /body_tracking_data
+    addVSTasksToSolver: true
+
   IntentCommunication:
     rightHandPointing:
       RShoulderPitch: [1.0]
@@ -157,7 +179,8 @@ configs:
 
 # Transitions map
 transitions:
-- [StandStraight, OK, HalfSitting, Strict]
+- [StandStraight, OK, NavigateToHuman, Strict]
+- [NavigateToHuman, OK, IntentCommunication, Strict]
 
 # Initial state
 init: StandStraight
