@@ -29,7 +29,6 @@ This repository is a fork of a base Pepper FSM `mc_rtc` controller [PepperFSMCon
 * [`mc_pepper`](https://gite.lirmm.fr/multi-contact/mc_pepper)
 * [`Azure_Kinect_ROS_Driver`](https://github.com/microsoft/Azure_Kinect_ROS_Driver)
 
-
 ## List of FSM states
 
 * NavigateToHuman
