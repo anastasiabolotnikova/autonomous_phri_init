@@ -150,6 +150,7 @@ configs:
     monitorHeadOrientation: true
     headToTabletAngleThreshold: 1.0 #rad
     rosRate: 30 #fps
+    rosTopic: /body_tracking_data
     imageToDisplay: backContactPlan.png
     textToSayStart: 'Hello. My name is Pepper. I am here to help. Please look at my screen'
     textToSayEnd: 'I will now carefully touch your back as is shown on my screen. Are you ready?'

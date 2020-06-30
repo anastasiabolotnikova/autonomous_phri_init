@@ -24,7 +24,7 @@ void IntentCommunication::start(mc_control::fsm::Controller & ctl_)
   if(!config_.has("rightHandPointing")){
     mc_rtc::log::error_and_throw<std::runtime_error>("IntentCommunication start | rightHandPointing config entry missing");
   }
-  rightHandPointing_ = config_("rightHandPointing");
+  config_("rightHandPointing", rightHandPointing_);
   ctl_.getPostureTask("pepper")->target(rightHandPointing_);
   // Higher posture task stiffness to move faster
   ctl_.getPostureTask("pepper")->stiffness(5.0);
@@ -33,7 +33,7 @@ void IntentCommunication::start(mc_control::fsm::Controller & ctl_)
   if(!config_.has("timeOut")){
     mc_rtc::log::error_and_throw<std::runtime_error>("IntentCommunication start | timeOut config entry missing");
   }
-  timeOut_ = config_("timeOut");
+  config_("timeOut", timeOut_);
 
   // Image URL to display on the tablet
   if(!config_.has("imageToDisplay")){
@@ -222,16 +222,20 @@ void IntentCommunication::teardown(mc_control::fsm::Controller & ctl_)
 }
 
 void IntentCommunication::monitorROSTopic(){
+  // Get ROS topic name
+  if(!config_.has("rosTopic")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("IntentCommunication monitorROSTopic | rosTopic config entry missing");
+  }
   // Subscribe to visual marker ROS topic
   std::shared_ptr<ros::NodeHandle> nh = mc_rtc::ROSBridge::get_node_handle();
-  ros::Subscriber sub = nh->subscribe("/body_tracking_data", 100, &IntentCommunication::updateVisualMarkerPose, this);
+  ros::Subscriber sub = nh->subscribe(config_("rosTopic"), 100, &IntentCommunication::updateVisualMarkerPose, this);
   // Get ROS topic monitoring rate
   double rosRate = 30.0;
-   if(!config_.has("rosRate")){
+  if(!config_.has("rosRate")){
     mc_rtc::log::warning("NavigateToHuman monitorROSTopic | rosRate config entry missing. Will use default: {}fps", rosRate);
   }
   config_("rosRate", rosRate);
-  // Monitor messages
+  // Monitor ROS topic messages
   ros::Rate r(rosRate);
   stateNeedsROS_ = true;
   while(stateNeedsROS_ && ros::ok()){
