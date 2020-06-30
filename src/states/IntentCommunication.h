@@ -63,13 +63,11 @@ struct IntentCommunication : mc_control::fsm::State
     bool communacationDone_ = false;
 
     // ROS spinning thread
-    std::thread spinThread_;
-    // Frequency for ROS topic monitoring thread (fps)
-    double spinRate_ = 30.0;
-    // ROS thread is kept alive while stateNeedsVision is true
-    bool stateNeedsVision_;
+    std::thread rosThread_;
+    // ROS thread is kept alive while stateNeedsROS_ is true
+    bool stateNeedsROS_;
     // Wait for at least one message from ROS topic
-    bool firstUpdateDone_ = false;
+    bool firstROSUpdateDone_ = false;
 
     // Human body parts in camera frame
     typedef enum

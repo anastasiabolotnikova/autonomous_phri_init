@@ -96,11 +96,8 @@ void IntentCommunication::start(mc_control::fsm::Controller & ctl_)
   }
 
   // Start ROS topic monitoring in a separate thread
-  if(!config_.has("spinRate")){
-    mc_rtc::log::warning("IntentCommunication start | spinRate config entry missing. Will use default: {}fps", spinRate_);
-  }
-  config_("spinRate", spinRate_);
-  spinThread_ = std::thread(std::bind(&IntentCommunication::monitorROSTopic, this));
+  rosThread_ = std::thread(std::bind(&IntentCommunication::monitorROSTopic, this));
+  mc_rtc::log::info("ROS thread started"); 
 
   // Add GUI elements
   ctl_.gui()->addElement({"IntentCommunication", "Frames"},
@@ -151,13 +148,13 @@ bool IntentCommunication::run(mc_control::fsm::Controller & ctl_)
   humanHeadXCamera_ = humanBodyMarkers_[ibvsFrameID_];
 
   // Update IBVS task error
-  if(firstUpdateDone_){
+  if(firstROSUpdateDone_){
     // Kepp human head in the FoV center
     ibvsTask_->error(humanHeadXCamera_.translation());
   }
 
   // Monitor human head, check if it was oriented to face the tablet at least once
-  if(monitorHeadOrientation_ && firstUpdateDone_ && !humanLookedAtTablet_){
+  if(monitorHeadOrientation_ && firstROSUpdateDone_ && !humanLookedAtTablet_){
     // Human head frame in world frame
     humanHeadXWorld_ = humanHeadXCamera_ * cameraXWorld_;
     // Normalized vector from human head frame origin to robot tablet frame origin
@@ -206,8 +203,8 @@ bool IntentCommunication::run(mc_control::fsm::Controller & ctl_)
 void IntentCommunication::teardown(mc_control::fsm::Controller & ctl_)
 {
   // Stop ROS thread
-  stateNeedsVision_ = false;
-  spinThread_.join();
+  stateNeedsROS_ = false;
+  rosThread_.join();
   mc_rtc::log::info("ROS spinning thread finished, exiting the state");
 
   // Remove IBVS task
@@ -223,10 +220,16 @@ void IntentCommunication::monitorROSTopic(){
   // Subscribe to visual marker ROS topic
   std::shared_ptr<ros::NodeHandle> nh = mc_rtc::ROSBridge::get_node_handle();
   ros::Subscriber sub = nh->subscribe("/body_tracking_data", 100, &IntentCommunication::updateVisualMarkerPose, this);
-  ros::Rate r(spinRate_);
-  stateNeedsVision_ = true;
-  mc_rtc::log::info("ROS thread started");  
-  while(stateNeedsVision_ && ros::ok()){
+  // Get ROS topic monitoring rate
+  double rosRate = 30.0;
+   if(!config_.has("rosRate")){
+    mc_rtc::log::warning("NavigateToHuman monitorROSTopic | rosRate config entry missing. Will use default: {}fps", rosRate);
+  }
+  config_("rosRate", rosRate);
+  // Monitor messages
+  ros::Rate r(rosRate);
+  stateNeedsROS_ = true;
+  while(stateNeedsROS_ && ros::ok()){
     ros::spinOnce();
     r.sleep();
   }
@@ -245,8 +248,8 @@ void IntentCommunication::updateVisualMarkerPose(const visualization_msgs::Marke
   }
 
   // Indicate that data was received at least once
-  if(!firstUpdateDone_){
-    firstUpdateDone_ = true;
+  if(!firstROSUpdateDone_){
+    firstROSUpdateDone_ = true;
   }
 }
 
