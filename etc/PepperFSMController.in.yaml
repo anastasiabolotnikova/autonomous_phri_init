@@ -149,7 +149,7 @@ configs:
     rightGripperOpening: 0.8
     monitorHeadOrientation: true
     headToTabletAngleThreshold: 1.0 #rad
-    spinRate: 30 #fps
+    rosRate: 30 #fps
     imageToDisplay: backContactPlan.png
     textToSayStart: 'Hello. My name is Pepper. I am here to help. Please look at my screen'
     textToSayEnd: 'I will now carefully touch your back as is shown on my screen. Are you ready?'

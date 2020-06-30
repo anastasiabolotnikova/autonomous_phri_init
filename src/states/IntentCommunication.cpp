@@ -1,11 +1,11 @@
 #include "IntentCommunication.h"
 #include "../PepperFSMController.h"
 
+#include <mc_pepper/devices/VisualDisplay.h>
+#include <mc_pepper/devices/Speaker.h>
 #include <tf/transform_broadcaster.h>
 #include <mc_tasks/MetaTaskLoader.h>
 #include <mc_rtc/gui/plot.h>
-#include <mc_pepper/devices/VisualDisplay.h>
-#include <mc_pepper/devices/Speaker.h>
 
 using Color = mc_rtc::gui::Color;
 using Style = mc_rtc::gui::plot::Style;
@@ -206,14 +206,19 @@ void IntentCommunication::teardown(mc_control::fsm::Controller & ctl_)
   stateNeedsROS_ = false;
   rosThread_.join();
   mc_rtc::log::info("ROS spinning thread finished, exiting the state");
-
   // Remove IBVS task
   ctl_.getPostureTask("pepper")->resetJointsSelector(ctl_.solver());
   ctl_.solver().removeTask(ibvsTask_);
-
   // Reset posture task
   ctl_.getPostureTask("pepper")->reset();
+  // Remove added log entry
+  ctl_.logger().removeLogEntry("headToTabletAngle");
+  // Remove GUI elements
   ctl_.gui()->removeCategory({"IntentCommunication", "Frames"});
+  if(monitorHeadOrientation_){
+    ctl_.gui()->removePlot("Target face orientation");
+  }
+  mc_rtc::log::info("IntentCommunication teardown done");
 }
 
 void IntentCommunication::monitorROSTopic(){
