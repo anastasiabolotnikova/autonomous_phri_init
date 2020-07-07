@@ -31,6 +31,9 @@ struct NavigateToHuman : mc_control::fsm::State
     // Time for plot
     double stateTime_ = 0.0;
 
+    // Indicate if state run function is called for the first time
+    bool firstStateRun_ = true;
+
     // PBVS task for mobile base navigation
     std::shared_ptr<mc_tasks::PositionBasedVisServoTask> mobileBasePBVSTask_;
     // Task completion threshold

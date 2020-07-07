@@ -91,6 +91,16 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<PepperFSMController &>(ctl_);
 
+  // State termination criteria
+  if(mobileBasePBVSTask_->eval().norm() <= pbvsTaskCompletion_ && !firstStateRun_ && firstROSUpdateDone_){
+    mc_rtc::log::info("mobileBasePBVSTask error: {}", mobileBasePBVSTask_->eval().norm());
+    output("OK");
+    return true;
+  }
+
+  // Updtae time for plot
+  stateTime_ = stateTime_ + ctl_.solver().dt();
+
   // Update camera frame wrt world for visualization
   cameraXWorld_ = ctl_.robot().bodyPosW(ctl.camOpticalFrame());
 
@@ -145,14 +155,11 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
   // Expect new data from ROS
   newROSData_ = false;
 
-  // State termination criteria
-  if(mobileBasePBVSTask_->eval().norm() <= pbvsTaskCompletion_ && firstROSUpdateDone_){
-    mc_rtc::log::info("mobileBasePBVSTask error: {}", mobileBasePBVSTask_->eval().norm());
-    output("OK");
-    return true;
+  // Prevent terminating the state before task eval is updated after first task error update
+  if(firstStateRun_){
+    firstStateRun_ = false;
   }
 
-  stateTime_ = stateTime_ + ctl_.solver().dt();
   return false;
 }
 
