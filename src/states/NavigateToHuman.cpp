@@ -4,6 +4,7 @@
 #include <mc_pepper/devices/TouchSensor.h>
 #include <tf/transform_broadcaster.h>
 #include <mc_tasks/MetaTaskLoader.h>
+#include <mc_rbdyn/rpy_utils.h>
 #include <mc_rtc/gui/plot.h>
 
 using Color = mc_rtc::gui::Color;
@@ -227,9 +228,32 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
   // Indicate that data was received at least once
   if(!firstROSUpdateDone_){
     firstROSUpdateDone_ = true;
+
+    // Human pelvis frame wrt world frame
+    sva::PTransformd pelvisXCamera = humanBodyMarkers_[pbvsRefFrame_];
+    sva::PTransformd pelvisXWorld = pelvisXCamera * cameraXWorld_; // should cameraXWorld_ be updated here?
+
+    // Extract pelvis orienattion euler angles wrt world frame
+    Eigen::Vector3d pelvisRPY = mc_rbdyn::rpyFromMat(pelvisXWorld.rotation());
+
+    // Check human orientation wrt world frame
+    if(!validHumanOrientation(pelvisRPY)){
+      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | invalid initial detected human orientation");
+    }
+    initHumanRot_ = humanBodyMarkers_[pbvsRefFrame_].rotation();
+
   }
   // Indicate that new data was received
   newROSData_ = true;
+}
+
+bool NavigateToHuman::validHumanOrientation(Eigen::Vector3d rpy){
+  // Only pitch angle must be validated, others can be arbitrary
+  if(rpy(1)>-1.87 && rpy(1) < -1.27){
+    mc_rtc::log::success("NavigateToHuman validHumanOrientation | initial detected human orientation check passed");
+    return true;
+  }
+  return false;
 }
 
 EXPORT_SINGLE_STATE("NavigateToHuman", NavigateToHuman)
