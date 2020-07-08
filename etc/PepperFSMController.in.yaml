@@ -132,7 +132,9 @@ configs:
       stiffness: 3.0
       dimWeight: [0.0, 0.0, 1.0, 1.0, 1.0, 0.0]
     pbvsTaskCompletion: 0.05
-    targetXMarker: [0.0, 0.15, -0.4]
+    targetXMarker: 
+      translation: [0.0, 0.15, -0.4]
+      rotation: [3.14159, -1.570796, 0]
     visionLost: 30 # control iterations
     ibvsTask:
       type: gaze
