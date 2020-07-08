@@ -102,9 +102,6 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
   // Updtae time for plot
   stateTime_ = stateTime_ + ctl_.solver().dt();
 
-  // Update camera frame wrt world for visualization
-  cameraXWorld_ = ctl_.robot().bodyPosW(ctl.camOpticalFrame());
-
   // Check if mobile base is stuck
   if(ctl.pepperHasBumpers()){
     for(const auto bn : ctl.bumperSensorNames()){
@@ -135,20 +132,27 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
     if(!firstROSUpdateDone_){
       mc_rtc::log::warning("Waiting for first ROS update");
     }else{
+      // Update camera frame wrt world for visualization
+      cameraXWorld_ = ctl_.robot().bodyPosW(ctl.camOpticalFrame());
+
       // IBVS task error update
       if(humanBodyMarkers_.find(ibvsRefFrame_) == humanBodyMarkers_.end()){
         mc_rtc::log::warning("Body frame for IBVS {} not found", ibvsRefFrame_);
       }else{
         ibvsTask_->error(humanBodyMarkers_[ibvsRefFrame_].translation());
       }
+
       // PBVS task error update
       if(humanBodyMarkers_.find(pbvsRefFrame_) == humanBodyMarkers_.end()){
         mc_rtc::log::warning("Body frame for PBVS {} not found", pbvsRefFrame_);
       }else{
+        // Data update
         markerXCamera_ = humanBodyMarkers_[pbvsRefFrame_];
         mobilebaseXCamera_ = ctl_.robot().X_b1_b2(ctl.camOpticalFrame(), "base_link");
         targetXCamera_ = targetXMarker_ * markerXCamera_;
-        targetXCamera_.rotation() = mobilebaseXCamera_.rotation();
+        // Set orientation target to face the human
+        targetXCamera_.rotation() = (mobileBaseRotationTargetXWorld_ * cameraXWorld_.inv()).rotation();
+        // Task error update
         mobileBasePBVSTask_->error(mobilebaseXCamera_ * targetXCamera_.inv());
       }
     }
@@ -216,6 +220,7 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
 
   for(const auto& m: msg->markers){
     // Convert marker pose in camera frame into Plucker transform
+    // Quaternion is inversed as it must be expressed in successor frame (sva PTransform.h)
     humanBodyMarkers_[m.id] = sva::PTransformd(Eigen::Quaterniond(m.pose.orientation.w,
                                                                  m.pose.orientation.x,
                                                                  m.pose.orientation.y,
@@ -240,8 +245,11 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
     if(!validHumanOrientation(pelvisRPY)){
       mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | invalid initial detected human orientation");
     }
-    initHumanRot_ = humanBodyMarkers_[pbvsRefFrame_].rotation();
 
+    // Compute mobile base rotation target (to be achieved in open loop) wrt world frame
+    Eigen::Vector3d mobilebaseRPY = mc_rbdyn::rpyFromMat((targetXMarker_ * pelvisXWorld).rotation());
+    // Zero uncontrollable non-yaw angles
+    mobileBaseRotationTargetXWorld_ = sva::PTransformd(mc_rbdyn::rpyToMat(0, 0, mobilebaseRPY(2)));
   }
   // Indicate that new data was received
   newROSData_ = true;
@@ -249,6 +257,7 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
 
 bool NavigateToHuman::validHumanOrientation(Eigen::Vector3d rpy){
   // Only pitch angle must be validated, others can be arbitrary
+  // Allow about 17deg angle deviation from fully perpendicular pelvis position wrt ground
   if(rpy(1)>-1.87 && rpy(1) < -1.27){
     mc_rtc::log::success("NavigateToHuman validHumanOrientation | initial detected human orientation check passed");
     return true;

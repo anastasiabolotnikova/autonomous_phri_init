@@ -27,8 +27,8 @@ struct NavigateToHuman : mc_control::fsm::State
 
     // Check if human orientation agrees with human sitting straingh assumption
     bool validHumanOrientation(Eigen::Vector3d rpy);
-    // Initial human body orientation
-    Eigen::Matrix3d initHumanRot_;
+    // Mobile base rotation target in world frame
+    sva::PTransformd mobileBaseRotationTargetXWorld_;
 
     // Full state configuration
     mc_rtc::Configuration config_;
