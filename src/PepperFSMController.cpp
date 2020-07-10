@@ -61,7 +61,7 @@ void PepperFSMController::reset(const mc_control::ControllerResetData & reset_da
 
   // Load relative CoM task
   if(config_.has("comTask")){
-    comTask_ = mc_tasks::MetaTaskLoader::load<CoMRelativeBodyTask>(solver(), config_("comTask"))
+    comTask_ = mc_tasks::MetaTaskLoader::load<mc_pepper::CoMRelativeBodyTask>(solver(), config_("comTask"));
     solver().addTask(comTask_);
 
     // CoM projection plot
