@@ -241,7 +241,7 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
     // Extract pelvis orienattion euler angles wrt world frame
     Eigen::Vector3d pelvisRPY = mc_rbdyn::rpyFromMat(pelvisXWorld.rotation());
 
-    // Check if human pelvis frame inclination angle agrees with sitting straingh assumption
+    // Check if human pelvis frame inclination angle agrees with sitting straight assumption
     double maxHumanIncAng = 35.0; // deg
     if(!config_.has("maxHumanIncAng")){
       mc_rtc::log::warning("NavigateToHuman updateVisualMarkerPose | maxHumanIncAng config entry missing. Useing default value: {}", maxHumanIncAng);

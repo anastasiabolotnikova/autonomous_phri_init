@@ -24,7 +24,7 @@ void FrameTest::start(mc_control::fsm::Controller & ctl_)
   );
 
 
-  /* Check if human pelvis frame inclination angle agrees with sitting straingh assumption
+  /* Check if human pelvis frame inclination angle agrees with sitting straight assumption
      Rotation matrix based human pelvis frame inclination check */
 
   // Coordinates of the pelvis rotation frame X axis unit vector tip in the world frame
