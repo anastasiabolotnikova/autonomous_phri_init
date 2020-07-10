@@ -25,10 +25,10 @@ struct NavigateToHuman : mc_control::fsm::State
     // ROS topic subscriber callback
     void updateVisualMarkerPose(const visualization_msgs::MarkerArray::ConstPtr& msg);
 
-    // Check if human orientation agrees with human sitting straingh assumption
-    bool validHumanOrientation(Eigen::Vector3d rpy);
+    // Compute angle between two 3D vectors
+    double v1v2Ang(Eigen::Vector3d v1, Eigen::Vector3d v2);
     // Mobile base rotation target in world frame
-    sva::PTransformd mobileBaseRotationTargetXWorld_;
+    sva::PTransformd mBaseRotTargetXWorld_;
 
     // Full state configuration
     mc_rtc::Configuration config_;

@@ -151,7 +151,7 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
         mobilebaseXCamera_ = ctl_.robot().X_b1_b2(ctl.camOpticalFrame(), "base_link");
         targetXCamera_ = targetXMarker_ * markerXCamera_;
         // Set orientation target to face the human
-        targetXCamera_.rotation() = (mobileBaseRotationTargetXWorld_ * cameraXWorld_.inv()).rotation();
+        targetXCamera_.rotation() = (mBaseRotTargetXWorld_ * cameraXWorld_.inv()).rotation();
         // Task error update
         mobileBasePBVSTask_->error(mobilebaseXCamera_ * targetXCamera_.inv());
       }
@@ -241,28 +241,33 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
     // Extract pelvis orienattion euler angles wrt world frame
     Eigen::Vector3d pelvisRPY = mc_rbdyn::rpyFromMat(pelvisXWorld.rotation());
 
-    // Check human orientation wrt world frame
-    if(!validHumanOrientation(pelvisRPY)){
-      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | invalid initial detected human orientation");
+    // Check if human pelvis frame inclination angle agrees with sitting straingh assumption
+    double maxHumanIncAng = 35.0; // deg
+    if(!config_.has("maxHumanIncAng")){
+      mc_rtc::log::warning("NavigateToHuman updateVisualMarkerPose | maxHumanIncAng config entry missing. Useing default value: {}", maxHumanIncAng);
     }
-
-    // Compute mobile base rotation target (to be achieved in open loop) wrt world frame
-    Eigen::Vector3d mobilebaseRPY = mc_rbdyn::rpyFromMat((targetXMarker_ * pelvisXWorld).rotation());
-    // Zero uncontrollable non-yaw angles
-    mobileBaseRotationTargetXWorld_ = sva::PTransformd(mc_rbdyn::rpyToMat(0, 0, mobilebaseRPY(2)));
+    config_("maxHumanIncAng", maxHumanIncAng);
+    Eigen::Vector3d pelvisX = pelvisXWorld.rotation().transpose().col(0);
+    Eigen::Vector3d worldZ = Eigen::Vector3d(0, 0, 1);
+    double humIncAng = v1v2Ang(pelvisX, worldZ);
+    if(humIncAng > maxHumanIncAng){
+      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | invalid initial detected human inclination");
+    }
+    // Inclination check passed
+    if(humIncAng != 0.0){
+      // Correct pelvis frame inclination
+      Eigen::Quaterniond quat = Eigen::Quaterniond().setFromTwoVectors(pelvisX, worldZ);
+      pelvisXWorld = pelvisXWorld * sva::PTransformd(quat.inverse());
+    }
+    // Compute mobile base orientation target in world frame
+    mBaseRotTargetXWorld_ = sva::PTransformd((targetXMarker_ * pelvisXWorld).rotation());
   }
   // Indicate that new data was received
   newROSData_ = true;
 }
 
-bool NavigateToHuman::validHumanOrientation(Eigen::Vector3d rpy){
-  // Only pitch angle must be validated, others can be arbitrary
-  // Allow about 17deg angle deviation from fully perpendicular pelvis position wrt ground
-  if(rpy(1)>-1.87 && rpy(1) < -1.27){
-    mc_rtc::log::success("NavigateToHuman validHumanOrientation | initial detected human orientation check passed");
-    return true;
-  }
-  return false;
+double NavigateToHuman::v1v2Ang(Eigen::Vector3d v1, Eigen::Vector3d v2){
+  return std::acos(v1.dot(v2)/(v1.norm() * v2.norm()));
 }
 
 EXPORT_SINGLE_STATE("NavigateToHuman", NavigateToHuman)

@@ -147,6 +147,7 @@ configs:
     rosRate: 30.0 # fps
     rosTopic: /body_tracking_data
     addVSTasksToSolver: true
+    maxHumanIncAng: 35 #deg
 
   IntentCommunication:
     rightHandPointing:
