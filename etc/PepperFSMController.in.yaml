@@ -180,6 +180,15 @@ configs:
     textToSayStart: 'Hello. My name is Pepper. I am here to help. Please look at my screen'
     textToSayEnd: 'I will now carefully touch your back as is shown on my screen. Are you ready?'
 
+  # Empty state to test frame operations
+  FrameTest:
+    pelvisXWorld:
+      translation: [0, 0, 0]
+      rotation: [0.5, -1.9198619, 1.7]
+    mobileBaseXPelvis:
+      translation: [-1, 0.15, -0.4]
+      rotation: [3.14159, -1.570796, 0]
+
 # Transitions map
 transitions:
 - [StandStraight, OK, NavigateToHuman, Strict]
