@@ -20,12 +20,6 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
     mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman | state requires human model in solver");
   }
 
-  // PBVS task completion threshold
-  if(!config_.has("pbvsTaskCompletion")){
-    mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman start | pbvsTaskCompletion config entry missing");
-  }
-  config_("pbvsTaskCompletion", pbvsTaskCompletion_);
-
   // Get desired mobile base target defined wrt human torso frame
   if(!config_.has("target_X_humanTorso")){
     mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman start | target_X_humanTorso config entry missing"); 
@@ -34,19 +28,6 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
   sva::PTransformd humanPosW = ctl_.robots().robot("human").posW();
   // Set target to be on the groud for convenience
   target_X_humanTorso = target_X_humanTorso * sva::PTransformd(Eigen::Vector3d(0.0, 0.0, -humanPosW.translation()[2]));
-
-  // Compute humanTorso and humanHead to camera transformations
-  camera_X_world = ctl_.robot().bodyPosW(ctl.camOpticalFrame());
-  humanTorso_X_world = ctl_.robots().robot("human").bodyPosW("base_link");
-  humanTorso_X_camera = humanTorso_X_world * camera_X_world.inv();
-  humanHead_X_world = ctl_.robots().robot("human").bodyPosW("HeadLink");
-  humanHead_X_camera = humanHead_X_world * camera_X_world.inv();
-
-  // Compute mobile base target to camera transformation
-  target_X_camera = target_X_humanTorso * humanTorso_X_camera;
-
-  // Compute mobileBase to camera transformation
-  mobileBase_X_camera = ctl_.robot().X_b1_b2(ctl.camOpticalFrame(), "base_link");
 
   // Add IBVS task to solver to controll camera orientation
   if(!config_.has("ibvsTask")){
@@ -57,8 +38,6 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
   ctl_.getPostureTask("pepper")->selectUnactiveJoints(ctl_.solver(), {"HeadYaw", "HeadPitch"});
   // Load IBVS task from config
   ibvsTask_ = mc_tasks::MetaTaskLoader::load<mc_tasks::GazeTask>(ctl_.solver(), config_("ibvsTask"));
-  // Minimize the error
-  ibvsTask_->error(humanHead_X_camera.translation());
   ctl_.solver().addTask(ibvsTask_);
 
   // Add PBVS task to solver to controll mobile base
@@ -67,8 +46,10 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
   }
   // Load PBVS task from config
   mobileBasePBVSTask_ = mc_tasks::MetaTaskLoader::load<mc_tasks::PositionBasedVisServoTask>(ctl_.solver(), config_("mobileBasePBVSTask"));
-  // Minimize the error
-  mobileBasePBVSTask_->error(mobileBase_X_camera * target_X_camera.inv());
+  if(!config_("mobileBasePBVSTask").has("completion")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman start | completion config entry missing for mobileBasePBVSTask");
+  }
+  pbvsTaskCriteria_.configure(*mobileBasePBVSTask_, ctl_.solver().dt(), config_("mobileBasePBVSTask")("completion"));
   ctl_.solver().addTask(mobileBasePBVSTask_);
   // Remove default free floating base position task from solver in this state
   ctl_.solver().removeTask(ctl.mobileBaseTask());
@@ -98,6 +79,12 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<PepperFSMController &>(ctl_);
 
+  // State termination criteria
+  if(pbvsTaskCriteria_.completed(*mobileBasePBVSTask_) && !firstStateRun_){
+    output("OK");
+    return true;
+  }
+
   // Updtae time for plot
   t_ += ctl_.solver().dt();
 
@@ -120,10 +107,9 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
   // Keep visual marker in the center of the onboard camera image
   ibvsTask_->error(humanHead_X_camera.translation());
 
-  // State termination criteria
-  if(mobileBasePBVSTask_->eval().norm() < pbvsTaskCompletion_){
-    output("OK");
-    return true;
+  // Prevent terminating the state before task eval is updated after first task error update
+  if(firstStateRun_){
+    firstStateRun_ = false;
   }
 
   return false;
