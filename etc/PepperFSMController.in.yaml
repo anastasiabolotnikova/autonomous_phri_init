@@ -180,6 +180,38 @@ configs:
     textToSayStart: 'Hello. My name is Pepper. I am here to help. Please look at my screen'
     textToSayEnd: 'I will now carefully touch your back as is shown on my screen. Are you ready?'
 
+  PreContactBack:
+    lookAtHandTarget:
+      type: lookAt
+      body: kinect_depth_optical_frame
+      bodyVector: [0.0, 0.0, 1.0]
+      weight: 100.0
+      stiffness: 3.0
+      activeJoints:
+        - HeadYaw
+        - HeadPitch
+    handTrajectoryTask:
+      type: bspline_trajectory
+      surface: LeftHand
+      duration: 3.0
+      dimWeight: [0.1, 0.1, 0.1, 1.0, 1.0, 1.0]
+      weight: 1000.0
+      stiffness: 3.0
+      displaySamples: 10
+      completion:
+        OR:
+          - eval: 1e-3
+          - AND:
+            - timeout: 3.5
+            - speed: 1e-2
+      targetSurface:
+        surface: MobileBase
+        translation: [0.3, 0.7, 0.95] # end of the bspline
+        rotation: [-1.57, 0.0, 0.0]
+        # control points in target surface frame
+        controlPoints: [[0.1, 0.5, 0.8], [0.3, 0.6, 0.95]]
+        oriWaypoints: [[5.0, [-1.57, 0.0, 0.0]]]
+
   # Empty state to test frame operations
   FrameTest:
     pelvisXWorld:

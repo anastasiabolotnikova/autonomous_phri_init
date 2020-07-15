@@ -2,5 +2,6 @@ add_fsm_state_simple(FrameTest)
 add_fsm_state_simple(StandStraight)
 add_fsm_state_simple(NavigateToHuman)
 add_fsm_state_simple(IntentCommunication)
+add_fsm_state_simple(PreContactBack)
 
 add_fsm_data_directory(data)
