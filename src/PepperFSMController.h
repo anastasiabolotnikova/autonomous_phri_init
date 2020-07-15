@@ -30,6 +30,9 @@ struct PepperFSMController_DLLAPI PepperFSMController : public mc_control::fsm::
 
     std::string camOpticalFrame() { return camOpticalFrame_; }
 
+    double humanHeight() { return humanHeight_; }
+    double chairSeatHeight() { return chairSeatHeight_; }
+
 private:
     // Controller configuration
     mc_rtc::Configuration config_;
@@ -53,4 +56,8 @@ private:
 
     // Camera optical frame name
     std::string camOpticalFrame_ = "";
+
+    // Setup dimensions, default values are average (m)
+    double humanHeight_ = 1.65;
+    double chairSeatHeight_ = 0.45;
 };

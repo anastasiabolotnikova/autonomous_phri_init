@@ -25,6 +25,16 @@ PepperFSMController::PepperFSMController(mc_rbdyn::RobotModulePtr rm, double dt,
   }
   config("camOpticalFrame", camOpticalFrame_);
 
+  // Setup dimensions
+  if(!config.has("humanHeight")){
+    mc_rtc::log::warning("PepperFSMController | humanHeight config entry missing. Will use default value: {}", humanHeight_);
+  }
+  if(!config.has("chairSeatHeight")){
+    mc_rtc::log::warning("PepperFSMController | chairSeatHeight config entry missing. Will use default value: {}", chairSeatHeight_);
+  }
+  config("humanHeight", humanHeight_);
+  config("chairSeatHeight", chairSeatHeight_);
+
   // Load entire controller configuration file
   config_.load(config);
   mc_rtc::log::success("PepperFSMController_RO-MAN2020 init done");

@@ -244,3 +244,7 @@ comPlot: true
 # Name of the camera optical frame (in URDF)
 camOpticalFrame: kinect_depth_optical_frame
 
+# Setup dimensions (m)
+humanHeight: 1.58
+chairSeatHeight: 0.43
+
