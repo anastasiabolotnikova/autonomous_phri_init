@@ -32,7 +32,13 @@ void PreContactBack::start(mc_control::fsm::Controller & ctl_)
 
   // Adjust trajectory task bspline end point Z axis value to the human height
   Eigen::Vector3d target = handTrajectoryTask_->spline().target();
-  target(2) = ctl.chairSeatHeight() + 0.3*ctl.humanHeight();
+  if(!std::isnan(ctl.humanUpperBackLevel())){
+    // Perception based
+    target(2) = ctl.humanUpperBackLevel();
+  }else{
+    // Model based
+    target(2) = ctl.chairSeatHeight() + 0.3*ctl.humanHeight();
+  }
   handTrajectoryTask_->spline().target(target);
 
   // Add hand trajectory task to the solver

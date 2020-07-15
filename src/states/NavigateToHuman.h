@@ -129,4 +129,9 @@ struct NavigateToHuman : mc_control::fsm::State
 
     // Mobile base position w.r.t camera as computed from kinematic chain
     sva::PTransformd mobilebaseXCamera_ = sva::PTransformd::Identity();
+
+    // Detected human upper back (point between chest and neck) distance from the floor
+    int chestFrame_ = firstHumanID_ + SPINE_CHEST;
+    int neckFrame_ = firstHumanID_ + SPINE_CHEST;
+    double humanUpperBackLevel_;
 };

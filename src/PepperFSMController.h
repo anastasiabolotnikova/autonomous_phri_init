@@ -32,6 +32,8 @@ struct PepperFSMController_DLLAPI PepperFSMController : public mc_control::fsm::
 
     double humanHeight() { return humanHeight_; }
     double chairSeatHeight() { return chairSeatHeight_; }
+    double humanUpperBackLevel() { return humanUpperBackLevel_; }
+    void humanUpperBackLevel(double dist) { humanUpperBackLevel_ = dist; }
 
 private:
     // Controller configuration
@@ -60,4 +62,7 @@ private:
     // Setup dimensions, default values are average (m)
     double humanHeight_ = 1.65;
     double chairSeatHeight_ = 0.45;
+
+    // Human upper back distance from the ground
+    double humanUpperBackLevel_;
 };

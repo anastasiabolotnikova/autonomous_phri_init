@@ -130,7 +130,7 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
   // Mobile base not stuck, vision not lost. Proceed normally
   if(!mobileBaseStuck_ && loopsWithoutROSUpdate_ < visionLost_){
     if(!firstROSUpdateDone_){
-      mc_rtc::log::warning("Waiting for first ROS update");
+      mc_rtc::log::warning("Waiting for the first ROS update");
     }else{
       // Update camera frame wrt world for visualization
       cameraXWorld_ = ctl_.robot().bodyPosW(ctl.camOpticalFrame());
@@ -154,6 +154,11 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
         targetXCamera_.rotation() = (mBaseRotTargetXWorld_ * cameraXWorld_.inv()).rotation();
         // Task error update
         mobileBasePBVSTask_->error(mobilebaseXCamera_ * targetXCamera_.inv());
+      }
+
+      // Record detected upper back level for other FSM states
+      if(!std::isnan(humanUpperBackLevel_)){
+        ctl.humanUpperBackLevel(humanUpperBackLevel_);
       }
     }
   }
@@ -261,6 +266,11 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
     }
     // Compute mobile base orientation target in world frame
     mBaseRotTargetXWorld_ = sva::PTransformd((targetXMarker_ * pelvisXWorld).rotation());
+
+    // Calculate human upper back distance from the ground
+    sva::PTransformd chestXWorld = humanBodyMarkers_[chestFrame_] * cameraXWorld_;
+    sva::PTransformd neckXWorld = humanBodyMarkers_[neckFrame_] * cameraXWorld_;
+    humanUpperBackLevel_ = (chestXWorld.translation()(2) + neckXWorld.translation()(2)) / 2;
   }
   // Indicate that new data was received
   newROSData_ = true;
