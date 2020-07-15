@@ -181,6 +181,8 @@ configs:
     textToSayEnd: 'I will now carefully touch your back as is shown on my screen. Are you ready?'
 
   PreContactBack:
+    grippers:
+      l_gripper: 1.0
     lookAtHandTarget:
       type: lookAt
       body: kinect_depth_optical_frame

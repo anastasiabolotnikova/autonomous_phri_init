@@ -35,6 +35,8 @@ struct PepperFSMController_DLLAPI PepperFSMController : public mc_control::fsm::
     double humanUpperBackLevel() { return humanUpperBackLevel_; }
     void humanUpperBackLevel(double dist) { humanUpperBackLevel_ = dist; }
 
+    void processGrippers(const mc_rtc::Configuration &gripper_config);
+
 private:
     // Controller configuration
     mc_rtc::Configuration config_;

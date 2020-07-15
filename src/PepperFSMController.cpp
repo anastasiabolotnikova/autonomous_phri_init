@@ -157,3 +157,15 @@ void PepperFSMController::reset(const mc_control::ControllerResetData & reset_da
   logger().addLogEntry(
       "base_q", [getBaseQ]() -> const std::vector<double> & { return getBaseQ(); });
 }
+
+void PepperFSMController::processGrippers(const mc_rtc::Configuration &gripper_config){
+  auto & ctl_grippers = robot().grippersByName();
+  for(const auto & gname : gripper_config.keys()){
+    if(ctl_grippers.count(gname) != 0){
+      double gval = gripper_config(gname);
+      if(gval>= 0 && gval <=1){
+        robot().gripper(gname).setTargetOpening(gval);
+      }
+    }
+  }
+}

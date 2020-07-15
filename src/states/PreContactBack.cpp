@@ -13,6 +13,11 @@ void PreContactBack::start(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<PepperFSMController &>(ctl_);
 
+  // Set target gripper opening
+  if(config_.has("grippers")){
+    ctl.processGrippers(config_("grippers"));
+  }
+
   // Load camera orientation task
   if(!config_.has("lookAtHandTarget")){
     mc_rtc::log::error_and_throw<std::runtime_error>("PreContactBack start | lookAtHandTarget config entry missing");
