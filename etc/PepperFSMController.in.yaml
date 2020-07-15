@@ -183,15 +183,6 @@ configs:
   PreContactBack:
     grippers:
       l_gripper: 1.0
-    lookAtHandTarget:
-      type: lookAt
-      body: kinect_depth_optical_frame
-      bodyVector: [0.0, 0.0, 1.0]
-      weight: 100.0
-      stiffness: 3.0
-      activeJoints:
-        - HeadYaw
-        - HeadPitch
     handTrajectoryTask:
       type: bspline_trajectory
       surface: LeftHand
@@ -213,6 +204,15 @@ configs:
         # control points in target surface frame
         controlPoints: [[0.1, 0.5, 0.8], [0.3, 0.6, 0.95]]
         oriWaypoints: [[5.0, [-1.57, 0.0, 0.0]]]
+    lookAtHandTarget:
+      type: lookAt
+      body: kinect_depth_optical_frame
+      bodyVector: [0.0, 0.0, 1.0]
+      weight: 100.0
+      stiffness: 3.0
+      activeJoints:
+        - HeadYaw
+        - HeadPitch
 
   # Empty state to test frame operations
   FrameTest:
