@@ -214,6 +214,18 @@ configs:
         - HeadYaw
         - HeadPitch
 
+  MakeContactBack:
+    handTask:
+      type: relBody6d
+      body: l_wrist
+      relBody: base_link
+      weight: 100.0
+      stiffness: 3.0
+      dimWeight: [0.0, 0.1, 0.1, 1.0, 1.0, 0.5]
+    moveInward: -0.5 #m
+    inContactDuration: 5.0 #s
+
+
   # Empty state to test frame operations
   FrameTest:
     pelvisXWorld:
