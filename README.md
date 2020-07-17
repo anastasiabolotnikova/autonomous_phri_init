@@ -28,6 +28,8 @@ This repository is a fork of a base Pepper FSM `mc_rtc` controller [PepperFSMCon
 * [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/tutorials/introduction/installation-guide.html)
 * [`mc_pepper`](https://gite.lirmm.fr/multi-contact/mc_pepper)
 * [`Azure_Kinect_ROS_Driver`](https://github.com/microsoft/Azure_Kinect_ROS_Driver)
+* [`XGBoost`](https://github.com/dmlc/xgboost) 
+  * Note: do system install (e.g. `set(CMAKE_INSTALL_PREFIX "/usr/local/")`) to enable CMake to `find_package(xgboost)`
 
 ## List of FSM states
 

@@ -2,10 +2,10 @@
 
 #include <mc_tasks/RelativeEndEffectorTask.h>
 #include <mc_control/fsm/State.h>
+#include <xgboost/c_api.h>
 
 struct MakeContactBack : mc_control::fsm::State
 {
-
     void configure(const mc_rtc::Configuration & config) override;
 
     void start(mc_control::fsm::Controller & ctl) override;
@@ -14,6 +14,9 @@ struct MakeContactBack : mc_control::fsm::State
 
     void teardown(mc_control::fsm::Controller & ctl) override;
 private:
+  // Update input vector elements in inputVec_
+  void updateInputVector(mc_control::fsm::Controller & ctl, std::vector<std::pair<std::string, std::string>> &features);
+
   // State configuration
   mc_rtc::Configuration config_;
 
@@ -23,4 +26,25 @@ private:
   double moveInward_;
   // How long to stay in contact after it has been detected
   double inContactDuration_;
+
+  // XGBoost predictor
+  BoosterHandle boosterHandle_;
+  // Monitored joint info
+  std::string monitoredJointName_;
+  unsigned int monitoredJointIndex_;
+  unsigned int monitoredJointRefOrder_;
+  // Names of the model input features
+  std::vector<std::pair<std::string, std::string>> features_;
+  // Number of features
+  bst_ulong numF_;
+  // Input feature vector handle
+  DMatrixHandle inputVec_;
+  // Prediction vector length
+  bst_ulong outLen_;
+  // Expected position tracking error
+  const float *errExp_;
+  // Measure position tracking error
+  double err_;
+  // Residual value
+  double jointResidual_;
 };

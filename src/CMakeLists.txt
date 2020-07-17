@@ -14,6 +14,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC mc_rtc::mc_control_fsm)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${catkin_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PUBLIC mc_pepper::devices)
 target_link_libraries(${PROJECT_NAME} PUBLIC mc_pepper::tasks)
+target_link_libraries(${PROJECT_NAME} PUBLIC xgboost::xgboost)
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION "${MC_RTC_LIBDIR}"
   LIBRARY DESTINATION "${MC_RTC_LIBDIR}"

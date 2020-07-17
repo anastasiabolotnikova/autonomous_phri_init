@@ -9,6 +9,7 @@ project(${PROJECT_NAME} CXX)
 find_package(mc_rtc 1.4.0 REQUIRED)
 find_package(mc_pepper REQUIRED)
 find_package(catkin REQUIRED COMPONENTS roscpp)
+find_package(xgboost REQUIRED)
 
 add_subdirectory(src)
 
