@@ -19,6 +19,8 @@ private:
   void updateInputVector(mc_control::fsm::Controller & ctl, std::vector<std::pair<std::string, std::string>> &features);
   // State plots
   void addPlot(mc_control::fsm::Controller & ctl);
+  // State log
+  void addLog(mc_control::fsm::Controller & ctl);
 
   // State configuration
   mc_rtc::Configuration config_;
@@ -48,13 +50,15 @@ private:
   DMatrixHandle inputVec_;
   // Prediction vector length
   bst_ulong outLen_;
+  // Prediction output vector
+  const float *outVec_;
   // Expected position tracking error
-  const float *errExp_;
+  double errExp_ = 0.0;
 
-  // Measure position tracking error
-  double err_;
+  // Measured position tracking error
+  double err_ = 0.0;
   // Residual value
-  double jointResidual_;
+  double jointResidual_ = 0.0;
   // Median filter
   const static int filterWindowSize_ = 50;
   MedianFilter<double, filterWindowSize_> medianFilter_;

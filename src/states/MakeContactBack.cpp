@@ -72,6 +72,7 @@ void MakeContactBack::start(mc_control::fsm::Controller & ctl_)
 
   // Add state plot and log
   addPlot(ctl_);
+  addLog(ctl_);
 
   mc_rtc::log::success("MakeContactBack state start done");
 }
@@ -83,7 +84,7 @@ bool MakeContactBack::run(mc_control::fsm::Controller & ctl_)
     updateInputVector(ctl_, features_);
 
     // Predict expected position tracking error
-    if(XGBoosterPredict(boosterHandle_, inputVec_, 0, 0, 0, &outLen_, &errExp_) == -1){
+    if(XGBoosterPredict(boosterHandle_, inputVec_, 0, 0, 0, &outLen_, &outVec_) == -1){
       mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack run | XGBoosterPredict failure");
     }
     if(outLen_!=1){
@@ -92,7 +93,8 @@ bool MakeContactBack::run(mc_control::fsm::Controller & ctl_)
 
     // Compute discrepancy
     err_ = ctl_.robot().q()[monitoredJointIndex_][0] - ctl_.robot().encoderValues()[monitoredJointRefOrder_];
-    jointResidual_ = err_ - errExp_[0];
+    errExp_ = outVec_[0];
+    jointResidual_ = err_ - errExp_;
 
     // Add residual signal to the filter window
     medianFilter_.addSample(jointResidual_);
@@ -155,6 +157,15 @@ void MakeContactBack::addPlot(mc_control::fsm::Controller & ctl_){
     mc_rtc::gui::plot::Y("+Threshold", [this]() { return residualThreshold_; }, Color::Red),
     mc_rtc::gui::plot::Y("-Threshold", [this]() { return -residualThreshold_; }, Color::Red)
   );
+}
+
+void MakeContactBack::addLog(mc_control::fsm::Controller & ctl_){
+  ctl_.logger().addLogEntry("Residual_raw", [this]() -> const double & { return jointResidual_; });
+  ctl_.logger().addLogEntry("Residual_filtered", [this]() -> const double & { return jointResidualFiltered_; });
+  ctl_.logger().addLogEntry("Residual_threshold+", [this]() -> const double & { return residualThreshold_; });
+  ctl_.logger().addLogEntry("Residual_threshold-", [this]() -> const double & { return -residualThreshold_; });
+  ctl_.logger().addLogEntry("Err_measured", [this]() -> const double & { return err_; });
+  ctl_.logger().addLogEntry("Err_predicted", [this]() -> const double & { return errExp_; });
 }
 
 EXPORT_SINGLE_STATE("MakeContactBack", MakeContactBack)
