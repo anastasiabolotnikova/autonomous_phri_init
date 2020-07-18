@@ -83,7 +83,9 @@ bool MakeContactBack::run(mc_control::fsm::Controller & ctl_)
   err_ = ctl_.robot().q()[monitoredJointIndex_][0] - ctl_.robot().encoderValues()[monitoredJointRefOrder_];
   jointResidual_ = err_ - errExp_[0];
 
-  // Filter residual
+  // Apply filter to residual signal
+  medianFilter_.addSample(jointResidual_);
+  jointResidualFiltered_ = medianFilter_.getMedian();
 
   return false;
 }

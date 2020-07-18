@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mc_tasks/RelativeEndEffectorTask.h>
+#include "../filters/MedianFilter.h"
 #include <mc_control/fsm/State.h>
 #include <xgboost/c_api.h>
 
@@ -43,8 +44,14 @@ private:
   bst_ulong outLen_;
   // Expected position tracking error
   const float *errExp_;
+
   // Measure position tracking error
   double err_;
   // Residual value
   double jointResidual_;
+  // Median filter
+  const static int filterWindowSize_ = 50;
+  MedianFilter<double, filterWindowSize_> medianFilter_;
+  // Filtered contact residual
+  double jointResidualFiltered_;
 };
