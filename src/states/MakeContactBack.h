@@ -20,11 +20,15 @@ private:
 
   // State configuration
   mc_rtc::Configuration config_;
+  // State time
+  double stateTime_ = 0.0;
 
   // Hand position task
   std::shared_ptr<mc_tasks::RelativeEndEffectorTask> handTask_;
   // By how much to move hand inward (Y axis)
   double moveInward_;
+  // Monitor if contact is detected
+  bool contactDetected_ = false;
   // How long to stay in contact after it has been detected
   double inContactDuration_;
 
@@ -52,6 +56,9 @@ private:
   // Median filter
   const static int filterWindowSize_ = 50;
   MedianFilter<double, filterWindowSize_> medianFilter_;
+  bool filterWindowFilled_ = false;
   // Filtered contact residual
   double jointResidualFiltered_;
+  // Residual threshold
+  double residualThreshold_;
 };

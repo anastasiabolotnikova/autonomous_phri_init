@@ -222,8 +222,9 @@ configs:
       stiffness: 3.0
       dimWeight: [0.0, 0.1, 0.1, 1.0, 1.0, 0.5]
     moveInward: -0.5 #m
-    inContactDuration: 5.0 #s
+    inContactDuration: 2.0 #s
     monitoredJoint: LShoulderRoll
+    residualThreshold: 0.015 # rad
     pathToModel: "@MC_STATES_INSTALL_PREFIX@/models/LShoulderRoll.model"
     # Order of features is important
     features:
