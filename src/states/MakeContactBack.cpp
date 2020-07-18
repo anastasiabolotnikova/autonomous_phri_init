@@ -2,6 +2,9 @@
 #include "../PepperFSMController.h"
 
 #include <mc_tasks/MetaTaskLoader.h>
+#include <mc_rtc/gui/plot.h>
+
+using Color = mc_rtc::gui::Color;
 
 void MakeContactBack::configure(const mc_rtc::Configuration & config)
 {
@@ -66,6 +69,9 @@ void MakeContactBack::start(mc_control::fsm::Controller & ctl_)
   if(numF_ != features_.size()){
     mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack start | Feature vector size mismatch. Expect {}, got {}", features_.size(), numF_);
   } // FIX removing this check causes prediction failure
+
+  // Add state plot and log
+  addPlot(ctl_);
 
   mc_rtc::log::success("MakeContactBack state start done");
 }
@@ -141,6 +147,14 @@ void MakeContactBack::updateInputVector(mc_control::fsm::Controller & ctl_, std:
   }
 }
 
-
+void MakeContactBack::addPlot(mc_control::fsm::Controller & ctl_){
+  // Plot filtered residual
+  ctl_.gui()->addPlot("Contact detection",
+    mc_rtc::gui::plot::X("Time (s)", [this]() { return stateTime_; }),
+    mc_rtc::gui::plot::Y("Residual", [this]() { return jointResidualFiltered_; }, Color::Blue),
+    mc_rtc::gui::plot::Y("+Threshold", [this]() { return residualThreshold_; }, Color::Red),
+    mc_rtc::gui::plot::Y("-Threshold", [this]() { return -residualThreshold_; }, Color::Red)
+  );
+}
 
 EXPORT_SINGLE_STATE("MakeContactBack", MakeContactBack)

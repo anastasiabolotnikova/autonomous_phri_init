@@ -17,6 +17,8 @@ struct MakeContactBack : mc_control::fsm::State
 private:
   // Update input vector elements in inputVec_
   void updateInputVector(mc_control::fsm::Controller & ctl, std::vector<std::pair<std::string, std::string>> &features);
+  // State plots
+  void addPlot(mc_control::fsm::Controller & ctl);
 
   // State configuration
   mc_rtc::Configuration config_;
@@ -58,7 +60,7 @@ private:
   MedianFilter<double, filterWindowSize_> medianFilter_;
   bool filterWindowFilled_ = false;
   // Filtered contact residual
-  double jointResidualFiltered_;
+  double jointResidualFiltered_ = 0.0;
   // Residual threshold
   double residualThreshold_;
 };
