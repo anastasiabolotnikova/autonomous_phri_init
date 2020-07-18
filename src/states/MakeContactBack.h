@@ -19,8 +19,10 @@ private:
   void updateInputVector(mc_control::fsm::Controller & ctl, std::vector<std::pair<std::string, std::string>> &features);
   // State plots
   void addPlot(mc_control::fsm::Controller & ctl);
+  void removePlot(mc_control::fsm::Controller & ctl);
   // State log
   void addLog(mc_control::fsm::Controller & ctl);
+  void removeLog(mc_control::fsm::Controller & ctl);
 
   // State configuration
   mc_rtc::Configuration config_;

@@ -124,8 +124,11 @@ bool MakeContactBack::run(mc_control::fsm::Controller & ctl_)
   return false;
 }
 
-void MakeContactBack::teardown(mc_control::fsm::Controller &)
+void MakeContactBack::teardown(mc_control::fsm::Controller & ctl_)
 {
+  ctl_.solver().removeTask(handTask_);
+  removePlot(ctl_);
+  removeLog(ctl_);
 }
 
 void MakeContactBack::updateInputVector(mc_control::fsm::Controller & ctl_, std::vector<std::pair<std::string, std::string>> &features){
@@ -159,6 +162,10 @@ void MakeContactBack::addPlot(mc_control::fsm::Controller & ctl_){
   );
 }
 
+void MakeContactBack::removePlot(mc_control::fsm::Controller & ctl_){
+  ctl_.gui()->removePlot("Contact detection");
+}
+
 void MakeContactBack::addLog(mc_control::fsm::Controller & ctl_){
   ctl_.logger().addLogEntry("Residual_raw", [this]() -> const double & { return jointResidual_; });
   ctl_.logger().addLogEntry("Residual_filtered", [this]() -> const double & { return jointResidualFiltered_; });
@@ -166,6 +173,15 @@ void MakeContactBack::addLog(mc_control::fsm::Controller & ctl_){
   ctl_.logger().addLogEntry("Residual_threshold-", [this]() -> const double & { return -residualThreshold_; });
   ctl_.logger().addLogEntry("Err_measured", [this]() -> const double & { return err_; });
   ctl_.logger().addLogEntry("Err_predicted", [this]() -> const double & { return errExp_; });
+}
+
+void MakeContactBack::removeLog(mc_control::fsm::Controller & ctl_){
+  ctl_.logger().removeLogEntry("Residual_raw");
+  ctl_.logger().removeLogEntry("Residual_filtered");
+  ctl_.logger().removeLogEntry("Residual_threshold+");
+  ctl_.logger().removeLogEntry("Residual_threshold-");
+  ctl_.logger().removeLogEntry("Err_measured");
+  ctl_.logger().removeLogEntry("Err_predicted");
 }
 
 EXPORT_SINGLE_STATE("MakeContactBack", MakeContactBack)
