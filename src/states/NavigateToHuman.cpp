@@ -93,7 +93,10 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<PepperFSMController &>(ctl_);
 
   // State termination criteria
-  if(pbvsTaskCriteria_.completed(*mobileBasePBVSTask_) && !firstStateRun_ && firstROSUpdateDone_){
+  if(pbvsTaskCriteria_.completed(*mobileBasePBVSTask_)
+                       && !firstStateRun_
+                       && firstROSUpdateDone_
+                       && taskErrorUpdated_){
     mc_rtc::log::info("mobileBasePBVSTask error: {}", mobileBasePBVSTask_->eval().norm());
     output("OK");
     return true;
@@ -154,6 +157,9 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
         targetXCamera_.rotation() = (mBaseRotTargetXWorld_ * cameraXWorld_.inv()).rotation();
         // Task error update
         mobileBasePBVSTask_->error(mobilebaseXCamera_ * targetXCamera_.inv());
+        if(!taskErrorUpdated_){
+          taskErrorUpdated_ = true;
+        }
       }
 
       // Record detected upper back level for other FSM states

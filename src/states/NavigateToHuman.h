@@ -43,6 +43,7 @@ struct NavigateToHuman : mc_control::fsm::State
     // PBVS task for mobile base navigation
     std::shared_ptr<mc_tasks::PositionBasedVisServoTask> mobileBasePBVSTask_;
     mc_control::CompletionCriteria pbvsTaskCriteria_;
+    bool taskErrorUpdated_ = false;
 
     // Desired mobilebase taget position w.r.t to the visual marker
     sva::PTransformd targetXMarker_ = sva::PTransformd::Identity();
