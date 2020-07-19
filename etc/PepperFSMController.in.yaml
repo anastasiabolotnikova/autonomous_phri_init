@@ -130,7 +130,8 @@ configs:
       weight: 100.0
       stiffness: 3.0
       dimWeight: [0.0, 0.0, 1.0, 1.0, 1.0, 0.0]
-    pbvsTaskCompletion: 0.05
+      completion:
+        eval: 0.05
     targetXMarker:
       translation: [0.0, 0.15, -0.4]
       rotation: [3.14159, -1.570796, 0]

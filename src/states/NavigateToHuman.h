@@ -2,6 +2,7 @@
 
 #include <mc_tasks/PositionBasedVisServoTask.h>
 #include "visualization_msgs/MarkerArray.h"
+#include <mc_control/CompletionCriteria.h>
 #include <mc_control/fsm/State.h>
 #include <mc_tasks/GazeTask.h>
 #include <mc_rtc/ros.h>
@@ -41,8 +42,7 @@ struct NavigateToHuman : mc_control::fsm::State
 
     // PBVS task for mobile base navigation
     std::shared_ptr<mc_tasks::PositionBasedVisServoTask> mobileBasePBVSTask_;
-    // Task completion threshold
-    double pbvsTaskCompletion_;
+    mc_control::CompletionCriteria pbvsTaskCriteria_;
 
     // Desired mobilebase taget position w.r.t to the visual marker
     sva::PTransformd targetXMarker_ = sva::PTransformd::Identity();

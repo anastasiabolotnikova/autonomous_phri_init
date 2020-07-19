@@ -31,10 +31,10 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
     ctl_.solver().removeTask(ctl.mobileBaseTask());
   }
   // PBVS task completion criteria
-  if(!config_.has("pbvsTaskCompletion")){
-    mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman start | pbvsTaskCompletion config entry missing");
+  if(!config_("mobileBasePBVSTask").has("completion")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman start | completion config entry missing for mobileBasePBVSTask");
   }
-  config_("pbvsTaskCompletion", pbvsTaskCompletion_);
+  pbvsTaskCriteria_.configure(*mobileBasePBVSTask_, ctl_.solver().dt(), config_("mobileBasePBVSTask")("completion"));
 
   // Translation of the mobile base target wrt visual marker frame
   if(!config_.has("targetXMarker")){
@@ -93,7 +93,7 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<PepperFSMController &>(ctl_);
 
   // State termination criteria
-  if(mobileBasePBVSTask_->eval().norm() <= pbvsTaskCompletion_ && !firstStateRun_ && firstROSUpdateDone_){
+  if(pbvsTaskCriteria_.completed(*mobileBasePBVSTask_) && !firstStateRun_ && firstROSUpdateDone_){
     mc_rtc::log::info("mobileBasePBVSTask error: {}", mobileBasePBVSTask_->eval().norm());
     output("OK");
     return true;
