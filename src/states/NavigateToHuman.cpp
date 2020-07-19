@@ -42,7 +42,7 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
   }
   targetXMarker_ = config_("targetXMarker");
 
-  // After how many control iterations consider vision as lost
+  // After how many seconds consider vision as lost
   if(!config_.has("visionLost")){
     mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman start | visionLost config entry missing");
   }
@@ -114,21 +114,21 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
 
   // Keep count of control iterations without ROS update
   if(newROSData_){
-    loopsWithoutROSUpdate_ = 0;
+    timeWithoutROSUpdate_ = 0.0;
   }else{
-    loopsWithoutROSUpdate_++;
+    timeWithoutROSUpdate_ += ctl_.solver().dt();
   }
 
   if(mobileBaseStuck_){
     mc_rtc::log::warning("Mobile base stuck");
   }
 
-  if(loopsWithoutROSUpdate_ >= visionLost_){
+  if(timeWithoutROSUpdate_ >= visionLost_){
     mc_rtc::log::warning("Vision is lost");
   }
 
   // Mobile base not stuck, vision not lost. Proceed normally
-  if(!mobileBaseStuck_ && loopsWithoutROSUpdate_ < visionLost_){
+  if(!mobileBaseStuck_ && timeWithoutROSUpdate_ < visionLost_){
     if(!firstROSUpdateDone_){
       mc_rtc::log::warning("Waiting for the first ROS update");
     }else{

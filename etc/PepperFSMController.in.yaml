@@ -135,7 +135,7 @@ configs:
     targetXMarker:
       translation: [0.0, 0.15, -0.4]
       rotation: [3.14159, -1.570796, 0]
-    visionLost: 30 # control iterations
+    visionLost: 0.5 #s
     ibvsTask:
       type: gaze
       body: kinect_depth_optical_frame

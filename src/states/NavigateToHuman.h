@@ -56,20 +56,19 @@ struct NavigateToHuman : mc_control::fsm::State
     bool stateNeedsROS_;
     // Start the state after first ROS update
     bool firstROSUpdateDone_ = false;
+
+    // Consider vision as lost if no new marker data recieved in last visionLost_ seconds
+    double visionLost_;
     // Track if data from ROS topic has been updated
     bool newROSData_ = false;
-
-    // Consider vision lost if no new marker data recieved in last visionLost_ iterations
-    unsigned int visionLost_;
+    // Time passed since data from ROS topic has been updated
+    double timeWithoutROSUpdate_ = 0.0;
 
     // Map marker id to frame transform
     std::map<unsigned int, sva::PTransformd> humanBodyMarkers_;
 
     // Monitor if contact with mobile base is detected through bumpers
     bool mobileBaseStuck_ = false;
-
-    // Number of control iterations without new ROS data
-    unsigned int loopsWithoutROSUpdate_ = 0;
 
     // Human body parts
     typedef enum
