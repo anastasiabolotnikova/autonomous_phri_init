@@ -133,6 +133,7 @@ bool MakeContactBack::run(mc_control::fsm::Controller & ctl_)
 
 void MakeContactBack::teardown(mc_control::fsm::Controller & ctl_)
 {
+  ctl_.solver().removeTask(lookAtHand_);
   ctl_.solver().removeTask(handTask_);
   removePlot(ctl_);
   removeLog(ctl_);
