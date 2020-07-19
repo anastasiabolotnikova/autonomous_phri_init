@@ -25,6 +25,10 @@ void MakeContactBack::configure(const mc_rtc::Configuration & config)
     mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack start | residualThreshold config entry missing");
   }
   config("residualThreshold", residualThreshold_);
+  if(!config.has("stiffDimWeights")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack start | stiffDimWeights config entry missing");
+  }
+  config("stiffDimWeights", stiffDimWeights_);
 
   // Load state config
   config_.load(config);
@@ -118,6 +122,12 @@ bool MakeContactBack::run(mc_control::fsm::Controller & ctl_)
       }
     }
   }else{
+    if(!handTaskReset_){
+      // Don't move arm after contact is detected
+      leftHandTask->dimWeight(stiffDimWeights_);
+      leftHandTask->reset();
+      handTaskReset_ = true;
+    }
     // In contact period countdown
     inContactDuration_ -= ctl_.solver().dt();
     // State termination criteria
