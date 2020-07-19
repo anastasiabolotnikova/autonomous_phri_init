@@ -124,8 +124,8 @@ bool MakeContactBack::run(mc_control::fsm::Controller & ctl_)
   }else{
     if(!handTaskReset_){
       // Don't move arm after contact is detected
-      leftHandTask->dimWeight(stiffDimWeights_);
-      leftHandTask->reset();
+      handTask_->dimWeight(stiffDimWeights_);
+      handTask_->reset();
       handTaskReset_ = true;
     }
     // In contact period countdown
