@@ -214,6 +214,16 @@ configs:
         - HeadPitch
 
   MakeContactBack:
+    lookAtHand:
+        type: lookAtSurface
+        body: kinect_depth_optical_frame
+        bodyVector: [0.0, 0.0, 1.0]
+        surface: LeftHand
+        weight: 100.0
+        stiffness: 3.0
+        activeJoints:
+          - HeadYaw
+          - HeadPitch
     handTask:
       type: relBody6d
       body: l_wrist

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mc_tasks/RelativeEndEffectorTask.h>
+#include <mc_tasks/LookAtSurfaceTask.h>
 #include "../filters/MedianFilter.h"
 #include <mc_control/fsm/State.h>
 #include <xgboost/c_api.h>
@@ -28,6 +29,9 @@ private:
   mc_rtc::Configuration config_;
   // State time
   double stateTime_ = 0.0;
+
+  // Camera orientation task
+  std::shared_ptr<mc_tasks::LookAtSurfaceTask> lookAtHand_;
 
   // Hand position task
   std::shared_ptr<mc_tasks::RelativeEndEffectorTask> handTask_;

@@ -34,6 +34,13 @@ void MakeContactBack::start(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<PepperFSMController &>(ctl_);
 
+  // Load camera orientation task
+  if(!config_.has("lookAtHand")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack start | lookAtHand config entry missing");
+  }
+  lookAtHand_ = mc_tasks::MetaTaskLoader::load<mc_tasks::LookAtSurfaceTask>(ctl.solver(), config_("lookAtHand"));
+  ctl.solver().addTask(lookAtHand_);
+
   // Load hand task
   if(!config_.has("handTask")){
     mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack start | handTask config entry missing");
