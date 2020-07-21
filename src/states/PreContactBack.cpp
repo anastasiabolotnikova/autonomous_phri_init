@@ -52,6 +52,8 @@ void PreContactBack::start(mc_control::fsm::Controller & ctl_)
     lookAtHandTarget_->target(target); // TODO check that this target is expressed in world frame
   }
   ctl_.solver().addTask(lookAtHandTarget_);
+
+  mc_rtc::log::info("PreContactBack start done");
 }
 
 bool PreContactBack::run(mc_control::fsm::Controller & ctl_)
@@ -69,6 +71,7 @@ void PreContactBack::teardown(mc_control::fsm::Controller & ctl_)
   // Remove added tasks
   ctl_.solver().removeTask(lookAtHandTarget_);
   ctl_.solver().removeTask(handTrajectoryTask_);
+  mc_rtc::log::info("PreContactBack teardown done");
 }
 
 EXPORT_SINGLE_STATE("PreContactBack", PreContactBack)
