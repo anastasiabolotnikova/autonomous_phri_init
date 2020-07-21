@@ -4,6 +4,7 @@
 #include <mc_pepper/devices/TouchSensor.h>
 #include <tf/transform_broadcaster.h>
 #include <mc_tasks/MetaTaskLoader.h>
+#include <mc_rbdyn/rpy_utils.h>
 #include <mc_rtc/gui/plot.h>
 
 using Color = mc_rtc::gui::Color;
@@ -314,6 +315,11 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
     }
     // Compute mobile base orientation target in world frame
     mBaseRotTargetXWorld_ = sva::PTransformd((targetXMarker_ * pelvisXWorld).rotation());
+    Eigen::Vector3d rpyToCheck = mc_rbdyn::rpyFromMat(mBaseRotTargetXWorld_.rotation());
+    if(rpyToCheck(0) > 1e-3 || rpyToCheck(1) > 1e-3){
+      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | mBaseRotTargetXWorld RPY check failed: {}",
+                                                                                rpyToCheck.transpose());
+    }
 
     // Calculate human upper back distance from the ground
     if(humanBodyMarkers_.find(chestFrame_) == humanBodyMarkers_.end()){
