@@ -32,6 +32,7 @@ bool StandStraight::run(mc_control::fsm::Controller & ctl_)
 
 void StandStraight::teardown(mc_control::fsm::Controller &)
 {
+  mc_rtc::log::info("StandStraight teardown done");
 }
 
 EXPORT_SINGLE_STATE("StandStraight", StandStraight)
