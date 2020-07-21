@@ -27,6 +27,7 @@ void PreContactBack::start(mc_control::fsm::Controller & ctl_)
     mc_rtc::log::error_and_throw<std::runtime_error>("PreContactBack start | completion config entry missing for handTrajectoryTask");
   }
   trajTaskCriteria_.configure(*handTrajectoryTask_, ctl_.solver().dt(), config_("handTrajectoryTask")("completion"));
+
   // Adjust trajectory task bspline end point Z axis value to the human height
   Eigen::Vector3d target = handTrajectoryTask_->spline().target();
   if(!std::isnan(ctl.humanUpperBackLevel())){
@@ -37,6 +38,7 @@ void PreContactBack::start(mc_control::fsm::Controller & ctl_)
     target(2) = ctl.chairSeatHeight() + 0.3*ctl.humanHeight();
   }
   handTrajectoryTask_->spline().target(target);
+
   // Add hand trajectory task to the solver
   ctl_.solver().addTask(handTrajectoryTask_);
 
