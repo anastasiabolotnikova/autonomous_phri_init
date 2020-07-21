@@ -47,7 +47,7 @@ void PreContactBack::start(mc_control::fsm::Controller & ctl_)
   lookAtHandTarget_ = mc_tasks::MetaTaskLoader::load<mc_tasks::LookAtTask>(ctl_.solver(), config_("lookAtHandTarget"));
   if(!config_("lookAtHandTarget").has("targetPos")){
     // Look at (adjusted) hand trajectory task target
-    lookAtHandTarget_->target(target);
+    lookAtHandTarget_->target(target); // TODO check that this target is expressed in world frame
   }
   ctl_.solver().addTask(lookAtHandTarget_);
 }
