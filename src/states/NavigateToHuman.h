@@ -26,7 +26,7 @@ struct NavigateToHuman : mc_control::fsm::State
     // ROS topic subscriber callback
     void updateVisualMarkerPose(const visualization_msgs::MarkerArray::ConstPtr& msg);
 
-    // Compute angle between two 3D vectors
+    // Compute angle in degrees between two 3D vectors
     double v1v2Ang(Eigen::Vector3d v1, Eigen::Vector3d v2);
     // Mobile base rotation target in world frame
     sva::PTransformd mBaseRotTargetXWorld_;
@@ -43,6 +43,7 @@ struct NavigateToHuman : mc_control::fsm::State
     // PBVS task for mobile base navigation
     std::shared_ptr<mc_tasks::PositionBasedVisServoTask> mobileBasePBVSTask_;
     mc_control::CompletionCriteria pbvsTaskCriteria_;
+    bool addVSTasksToSolver_ = true;
     bool taskErrorUpdated_ = false;
 
     // Desired mobilebase taget position w.r.t to the visual marker
@@ -132,6 +133,6 @@ struct NavigateToHuman : mc_control::fsm::State
 
     // Detected human upper back (point between chest and neck) distance from the floor
     int chestFrame_ = firstHumanID_ + SPINE_CHEST;
-    int neckFrame_ = firstHumanID_ + SPINE_CHEST;
+    int neckFrame_ = firstHumanID_ + NECK;
     double humanUpperBackLevel_;
 };

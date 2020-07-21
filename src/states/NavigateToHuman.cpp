@@ -4,7 +4,6 @@
 #include <mc_pepper/devices/TouchSensor.h>
 #include <tf/transform_broadcaster.h>
 #include <mc_tasks/MetaTaskLoader.h>
-#include <mc_rbdyn/rpy_utils.h>
 #include <mc_rtc/gui/plot.h>
 
 using Color = mc_rtc::gui::Color;
@@ -20,12 +19,17 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<PepperFSMController &>(ctl_);
 
+  // Add VS tasks to solver or not (used for debugging the state)
+  if(config_.has("addVSTasksToSolver")){
+    config_("addVSTasksToSolver", addVSTasksToSolver_);
+  }
+
   // Add mobile base PBVS task to solver
   if(!config_.has("mobileBasePBVSTask")){
     mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman start | mobileBasePBVSTask config entry missing");
   }
   mobileBasePBVSTask_ = mc_tasks::MetaTaskLoader::load<mc_tasks::PositionBasedVisServoTask>(ctl_.solver(), config_("mobileBasePBVSTask"));
-  if(config_("addVSTasksToSolver", false)){
+  if(addVSTasksToSolver_){
     ctl_.solver().addTask(mobileBasePBVSTask_);
     // Remove default mobile base position task
     ctl_.solver().removeTask(ctl.mobileBaseTask());
@@ -53,9 +57,7 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
     mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman start | ibvsTask config entry missing");
   }
   ibvsTask_ = mc_tasks::MetaTaskLoader::load<mc_tasks::GazeTask>(ctl_.solver(), config_("ibvsTask"));
-  if(config_("addVSTasksToSolver", false)){
-    // Unselect neck joints from the posture task
-    ctl_.getPostureTask("pepper")->selectUnactiveJoints(ctl_.solver(), {"HeadYaw", "HeadPitch"});
+  if(addVSTasksToSolver_){
     ctl_.solver().addTask(ibvsTask_);
   }
 
@@ -93,10 +95,8 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<PepperFSMController &>(ctl_);
 
   // State termination criteria
-  if(pbvsTaskCriteria_.completed(*mobileBasePBVSTask_)
-                       && !firstStateRun_
-                       && firstROSUpdateDone_
-                       && taskErrorUpdated_){
+  if(addVSTasksToSolver_ && pbvsTaskCriteria_.completed(*mobileBasePBVSTask_)
+      && !firstStateRun_ && firstROSUpdateDone_ && taskErrorUpdated_){
     mc_rtc::log::info("mobileBasePBVSTask error: {}", mobileBasePBVSTask_->eval().norm());
     output("OK");
     return true;
@@ -191,7 +191,7 @@ void NavigateToHuman::teardown(mc_control::fsm::Controller & ctl_)
   // Remove added log entries
   ctl_.logger().removeLogEntry("PBVS_error");
   ctl_.logger().removeLogEntry("marker_pos");
-  if(config_("addVSTasksToSolver", false)){
+  if(addVSTasksToSolver_){
     // Remove PBVS task
     ctl_.solver().removeTask(mobileBasePBVSTask_);
     // Add default mobile base task back to the solver
@@ -228,7 +228,10 @@ void NavigateToHuman::monitorROSTopic(){
 }
 
 void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArray::ConstPtr& msg){
+  // Reset marker map
+  humanBodyMarkers_.clear();
 
+  // Fill in map with new data
   for(const auto& m: msg->markers){
     // Convert marker pose in camera frame into Plucker transform
     // Quaternion is inversed as it must be expressed in successor frame (sva PTransform.h)
@@ -240,22 +243,25 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
                                                           m.pose.position.y,
                                                           m.pose.position.z));
   }
+  if(humanBodyMarkers_.size() == 0){
+    mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | Got array of 0 markers from Azure");
+  }
 
   // Indicate that data was received at least once
   if(!firstROSUpdateDone_){
     firstROSUpdateDone_ = true;
-
+    // Check if PBVS frame exists
+    if(humanBodyMarkers_.find(pbvsRefFrame_) == humanBodyMarkers_.end()){
+      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | Body frame for PBVS {} not found", pbvsRefFrame_);
+    }
     // Human pelvis frame wrt world frame
     sva::PTransformd pelvisXCamera = humanBodyMarkers_[pbvsRefFrame_];
     sva::PTransformd pelvisXWorld = pelvisXCamera * cameraXWorld_; // should cameraXWorld_ be updated here?
 
-    // Extract pelvis orienattion euler angles wrt world frame
-    Eigen::Vector3d pelvisRPY = mc_rbdyn::rpyFromMat(pelvisXWorld.rotation());
-
     // Check if human pelvis frame inclination angle agrees with sitting straight assumption
     double maxHumanIncAng = 35.0; // deg
     if(!config_.has("maxHumanIncAng")){
-      mc_rtc::log::warning("NavigateToHuman updateVisualMarkerPose | maxHumanIncAng config entry missing. Useing default value: {}", maxHumanIncAng);
+      mc_rtc::log::warning("NavigateToHuman updateVisualMarkerPose | maxHumanIncAng config entry missing. Using default value: {}", maxHumanIncAng);
     }
     config_("maxHumanIncAng", maxHumanIncAng);
     Eigen::Vector3d pelvisX = pelvisXWorld.rotation().transpose().col(0);
@@ -263,6 +269,8 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
     double humIncAng = v1v2Ang(pelvisX, worldZ);
     if(humIncAng > maxHumanIncAng){
       mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | invalid initial detected human inclination");
+    }else{
+      mc_rtc::log::success("NavigateToHuman updateVisualMarkerPose | human inclination OK: {}deg", humIncAng);
     }
     // Inclination check passed
     if(humIncAng != 0.0){
@@ -274,8 +282,18 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
     mBaseRotTargetXWorld_ = sva::PTransformd((targetXMarker_ * pelvisXWorld).rotation());
 
     // Calculate human upper back distance from the ground
+    if(humanBodyMarkers_.find(chestFrame_) == humanBodyMarkers_.end()){
+      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | chestFrame {} not found", chestFrame_);
+    }
+    if(humanBodyMarkers_.find(neckFrame_) == humanBodyMarkers_.end()){
+      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | neckFrame {} not found", neckFrame_);
+    }
     sva::PTransformd chestXWorld = humanBodyMarkers_[chestFrame_] * cameraXWorld_;
     sva::PTransformd neckXWorld = humanBodyMarkers_[neckFrame_] * cameraXWorld_;
+    if(chestXWorld.translation()(2) >= neckXWorld.translation()(2)){
+      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | human detection failure: chest height ({}m) above or equal to neck ({}m)",
+                                                                                                 chestXWorld.translation()(2), neckXWorld.translation()(2));
+    }
     humanUpperBackLevel_ = (chestXWorld.translation()(2) + neckXWorld.translation()(2)) / 2;
   }
   // Indicate that new data was received
@@ -283,7 +301,7 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
 }
 
 double NavigateToHuman::v1v2Ang(Eigen::Vector3d v1, Eigen::Vector3d v2){
-  return std::acos(v1.dot(v2)/(v1.norm() * v2.norm()));
+  return mc_rtc::constants::toDeg(std::acos(v1.dot(v2)/(v1.norm() * v2.norm())));
 }
 
 EXPORT_SINGLE_STATE("NavigateToHuman", NavigateToHuman)
