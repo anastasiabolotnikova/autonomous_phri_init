@@ -124,6 +124,7 @@ configs:
     postureTaskCompletion: 0.7
 
   NavigateToHuman:
+    addVSTasksToSolver: true #debug
     mobileBasePBVSTask:
       type: pbvs
       surface: MobileBase
@@ -139,14 +140,13 @@ configs:
     ibvsTask:
       type: gaze
       body: kinect_depth_optical_frame
-      weight: 10.0
+      weight: 100.0
       stiffness: 3.0
       activeJoints:
         - HeadYaw
         - HeadPitch
-    rosRate: 30.0 # fps
+    rosRate: 15.0 # fps
     rosTopic: /body_tracking_data
-    addVSTasksToSolver: true
     maxHumanIncAng: 35 #deg
 
   IntentCommunication:
