@@ -66,5 +66,5 @@ private:
     double chairSeatHeight_ = 0.45;
 
     // Human upper back distance from the ground
-    double humanUpperBackLevel_;
+    double humanUpperBackLevel_ = std::numeric_limits<double>::quiet_NaN();
 };
