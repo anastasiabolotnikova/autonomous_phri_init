@@ -124,20 +124,22 @@ configs:
     postureTaskCompletion: 0.7
 
   NavigateToHuman:
-    addVSTasksToSolver: true #debug
+    addVSTasksToSolver: true #false for debug
     mobileBasePBVSTask:
+      name: pbvsTask
       type: pbvs
       surface: MobileBase
       weight: 100.0
       stiffness: 3.0
       dimWeight: [0.0, 0.0, 1.0, 1.0, 1.0, 0.0]
       completion:
-        eval: 0.05
+        eval: 0.1
     targetXMarker:
-      translation: [0.0, 0.15, -0.4]
+      translation: [0.0, 0.15, -0.55]
       rotation: [3.14159, -1.570796, 0]
     visionLost: 0.5 #s
     ibvsTask:
+      name: ibvsTask
       type: gaze
       body: kinect_depth_optical_frame
       weight: 100.0
@@ -148,6 +150,8 @@ configs:
     rosRate: 15.0 # fps
     rosTopic: /body_tracking_data
     maxHumanIncAng: 35 #deg
+    minUpperBackLvl: 0.8 #m
+    maxUpperBackLvl: 1.1 #m
 
   IntentCommunication:
     rightHandPointing:
@@ -188,15 +192,15 @@ configs:
       surface: LeftHand
       duration: 3.0
       dimWeight: [0.1, 0.1, 0.1, 1.0, 1.0, 1.0]
-      weight: 1000.0
+      weight: 100.0
       stiffness: 3.0
       displaySamples: 10
       completion:
         OR:
           - eval: 1e-3
           - AND:
-            - timeout: 3.5
-            - speed: 1e-2
+            - timeout: 5.0
+            - speed: 1e-3
       targetSurface:
         surface: MobileBase
         translation: [0.3, 0.7, 0.95] # end of the bspline

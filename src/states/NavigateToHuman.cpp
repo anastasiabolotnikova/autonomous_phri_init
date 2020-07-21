@@ -39,6 +39,10 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
     mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman start | completion config entry missing for mobileBasePBVSTask");
   }
   pbvsTaskCriteria_.configure(*mobileBasePBVSTask_, ctl_.solver().dt(), config_("mobileBasePBVSTask")("completion"));
+  if(!config_("mobileBasePBVSTask")("completion").has("eval")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman start | eval config entry missing from PBVS task completion criteria");
+  }
+  pbvsTaskErrorThreshold_ = config_("mobileBasePBVSTask")("completion")("eval");
 
   // Translation of the mobile base target wrt visual marker frame
   if(!config_.has("targetXMarker")){
@@ -61,9 +65,19 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
     ctl_.solver().addTask(ibvsTask_);
   }
 
+  // Upper back level acceptable interval
+  if(!config_.has("minUpperBackLvl")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman start | minUpperBackLvl config entry missing");
+  }
+  if(!config_.has("maxUpperBackLvl")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman start | maxUpperBackLvl config entry missing");
+  }
+  config_("minUpperBackLvl", minUpperBackLvl_);
+  config_("minUpperBackLvl", maxUpperBackLvl_);
+
   // Start ROS topic monitoring thread
   rosThread_ = std::thread(std::bind(&NavigateToHuman::monitorROSTopic, this));
-  mc_rtc::log::info("ROS thread started");
+  mc_rtc::log::info("NavigateToHuman start | ROS thread started");
 
   // Plot PBVS task error components
   ctl_.gui()->addPlot("Navigation to target",
@@ -85,6 +99,8 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
 
   // Add PBVS log entries
   ctl_.logger().addLogEntry("PBVS_error", [this]() -> const Eigen::Vector6d { return mobileBasePBVSTask_->eval(); });
+  ctl_.logger().addLogEntry("PBVS_norm", [this]() -> const double { return mobileBasePBVSTask_->eval().norm(); });
+  ctl_.logger().addLogEntry("PBVS_threshold", [this]() -> const double { return pbvsTaskErrorThreshold_; });
   ctl_.logger().addLogEntry("marker_pos", [this]() -> const Eigen::Vector3d { return markerXCamera_.translation(); });
 
   mc_rtc::log::success("NavigateToHuman state start done");
@@ -97,7 +113,17 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
   // State termination criteria
   if(addVSTasksToSolver_ && pbvsTaskCriteria_.completed(*mobileBasePBVSTask_)
       && !firstStateRun_ && firstROSUpdateDone_ && taskErrorUpdated_){
-    mc_rtc::log::info("mobileBasePBVSTask error: {}", mobileBasePBVSTask_->eval().norm());
+    mc_rtc::log::info("mobileBasePBVSTask eval: {}", mobileBasePBVSTask_->eval().norm());
+    // Extra protection to prevent robot from moving mobile base
+    if(addVSTasksToSolver_){
+      // Remove PBVS task
+      ctl_.solver().removeTask(mobileBasePBVSTask_);
+      // Add default mobile base task back to the solver
+      ctl.mobileBaseTask()->reset();
+      ctl_.solver().addTask(ctl.mobileBaseTask());
+      // Romeve IBVS task
+      ctl_.solver().removeTask(ibvsTask_);
+    }
     output("OK");
     return true;
   }
@@ -109,6 +135,7 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
   if(ctl.pepperHasBumpers()){
     for(const auto bn : ctl.bumperSensorNames()){
       auto & bumper = ctl_.robot().device<mc_pepper::TouchSensor>(bn);
+      // TODO check if contact is detected here
       if(bumper.touch()){
         mobileBaseStuck_ = true;
       }
@@ -123,31 +150,31 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
   }
 
   if(mobileBaseStuck_){
-    mc_rtc::log::warning("Mobile base stuck");
+    mc_rtc::log::warning("NavigateToHuman run | Mobile base stuck");
   }
 
   if(timeWithoutROSUpdate_ >= visionLost_){
-    mc_rtc::log::warning("Vision is lost");
+    mc_rtc::log::warning("NavigateToHuman run | Vision is lost");
   }
 
   // Mobile base not stuck, vision not lost. Proceed normally
   if(!mobileBaseStuck_ && timeWithoutROSUpdate_ < visionLost_){
     if(!firstROSUpdateDone_){
-      mc_rtc::log::warning("Waiting for the first ROS update");
+      mc_rtc::log::warning("NavigateToHuman run | Waiting for the first ROS update");
     }else{
       // Update camera frame wrt world for visualization
       cameraXWorld_ = ctl_.robot().bodyPosW(ctl.camOpticalFrame());
 
       // IBVS task error update
       if(humanBodyMarkers_.find(ibvsRefFrame_) == humanBodyMarkers_.end()){
-        mc_rtc::log::warning("Body frame for IBVS {} not found", ibvsRefFrame_);
+        mc_rtc::log::warning("NavigateToHuman run | Body frame for IBVS {} not found", ibvsRefFrame_);
       }else{
         ibvsTask_->error(humanBodyMarkers_[ibvsRefFrame_].translation());
       }
 
       // PBVS task error update
       if(humanBodyMarkers_.find(pbvsRefFrame_) == humanBodyMarkers_.end()){
-        mc_rtc::log::warning("Body frame for PBVS {} not found", pbvsRefFrame_);
+        mc_rtc::log::warning("NavigateToHuman run | Body frame for PBVS {} not found", pbvsRefFrame_);
       }else{
         // Data update
         markerXCamera_ = humanBodyMarkers_[pbvsRefFrame_];
@@ -159,12 +186,19 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
         mobileBasePBVSTask_->error(mobilebaseXCamera_ * targetXCamera_.inv());
         if(!taskErrorUpdated_){
           taskErrorUpdated_ = true;
+          mc_rtc::log::info("NavigateToHuman run | PBVS task updated with error {}",
+                              (mobilebaseXCamera_ * targetXCamera_.inv()).translation().transpose());
         }
       }
 
       // Record detected upper back level for other FSM states
-      if(!std::isnan(humanUpperBackLevel_)){
-        ctl.humanUpperBackLevel(humanUpperBackLevel_);
+      if(!std::isnan(ctl.humanUpperBackLevel())){
+        if(humanUpperBackLevel_ > minUpperBackLvl_ && humanUpperBackLevel_ < maxUpperBackLvl_){
+          ctl.humanUpperBackLevel(humanUpperBackLevel_);
+        }else{
+          mc_rtc::log::error("NavigateToHuman run | detected humanUpperBackLevel outside acceptable range {} < {} < {}. Will use model based value {}",
+                                  minUpperBackLvl_, humanUpperBackLevel_, maxUpperBackLvl_, ctl.chairSeatHeight() + 0.3*ctl.humanHeight());
+        }
       }
     }
   }
@@ -182,9 +216,6 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
 void NavigateToHuman::teardown(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<PepperFSMController &>(ctl_);
-  // Stop ROS thread
-  stateNeedsROS_ = false;
-  rosThread_.join();
   // Remove GUI elements
   ctl_.gui()->removePlot("Navigation to target");
   ctl_.gui()->removeCategory({"NavigateToHuman", "Frames"});
@@ -198,9 +229,11 @@ void NavigateToHuman::teardown(mc_control::fsm::Controller & ctl_)
     ctl.mobileBaseTask()->reset();
     ctl_.solver().addTask(ctl.mobileBaseTask());
     // Romeve IBVS task
-    ctl_.getPostureTask("pepper")->resetJointsSelector(ctl_.solver());
     ctl_.solver().removeTask(ibvsTask_);
   }
+  // Stop ROS thread
+  stateNeedsROS_ = false;
+  rosThread_.join();
   mc_rtc::log::info("NavigateToHuman teardown done");
 }
 
@@ -210,8 +243,8 @@ void NavigateToHuman::monitorROSTopic(){
     mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman monitorROSTopic | rosTopic config entry missing");
   }
   // Subscribe to visual marker ROS topic
-  std::shared_ptr<ros::NodeHandle> nh = mc_rtc::ROSBridge::get_node_handle();
-  ros::Subscriber sub = nh->subscribe(config_("rosTopic"), 100, &NavigateToHuman::updateVisualMarkerPose, this);
+  nh_ = mc_rtc::ROSBridge::get_node_handle();
+  ros::Subscriber sub = nh_->subscribe(config_("rosTopic"), 100, &NavigateToHuman::updateVisualMarkerPose, this);
   // Get ROS topic monitoring rate
   double rosRate = 30.0;
    if(!config_.has("rosRate")){
@@ -225,6 +258,7 @@ void NavigateToHuman::monitorROSTopic(){
     ros::spinOnce();
     r.sleep();
   }
+  mc_rtc::log::info("NavigateToHuman monitorROSTopic | ROS thread terminated");
 }
 
 void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArray::ConstPtr& msg){
@@ -295,6 +329,8 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
                                                                                                  chestXWorld.translation()(2), neckXWorld.translation()(2));
     }
     humanUpperBackLevel_ = (chestXWorld.translation()(2) + neckXWorld.translation()(2)) / 2;
+    mc_rtc::log::info("NavigateToHuman updateVisualMarkerPose | detectedhuman upper back level from the ground: {}m",
+                                                                                      humanUpperBackLevel_);
   }
   // Indicate that new data was received
   newROSData_ = true;

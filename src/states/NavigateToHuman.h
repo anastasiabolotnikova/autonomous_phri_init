@@ -43,6 +43,7 @@ struct NavigateToHuman : mc_control::fsm::State
     // PBVS task for mobile base navigation
     std::shared_ptr<mc_tasks::PositionBasedVisServoTask> mobileBasePBVSTask_;
     mc_control::CompletionCriteria pbvsTaskCriteria_;
+    double pbvsTaskErrorThreshold_ = 0.0; // for plot
     bool addVSTasksToSolver_ = true;
     bool taskErrorUpdated_ = false;
 
@@ -134,5 +135,8 @@ struct NavigateToHuman : mc_control::fsm::State
     // Detected human upper back (point between chest and neck) distance from the floor
     int chestFrame_ = firstHumanID_ + SPINE_CHEST;
     int neckFrame_ = firstHumanID_ + NECK;
-    double humanUpperBackLevel_;
+    double humanUpperBackLevel_, minUpperBackLvl_, maxUpperBackLvl_;
+
+    // ROS node handle
+    std::shared_ptr<ros::NodeHandle> nh_;
 };
