@@ -99,10 +99,10 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
   );
 
   // Add PBVS log entries
-  ctl_.logger().addLogEntry("PBVS_error", [this]() -> const Eigen::Vector6d { return mobileBasePBVSTask_->eval(); });
-  ctl_.logger().addLogEntry("PBVS_norm", [this]() -> const double { return mobileBasePBVSTask_->eval().norm(); });
-  ctl_.logger().addLogEntry("PBVS_threshold", [this]() -> const double { return pbvsTaskErrorThreshold_; });
-  ctl_.logger().addLogEntry("marker_pos", [this]() -> const Eigen::Vector3d { return markerXCamera_.translation(); });
+  ctl_.logger().addLogEntry("PBVS_error", [this]() -> const Eigen::Vector6d & { return mobileBasePBVSTask_->eval(); });
+  ctl_.logger().addLogEntry("PBVS_norm", [this]() -> const double & { return mobileBasePBVSTask_->eval().norm(); });
+  ctl_.logger().addLogEntry("PBVS_threshold", [this]() -> const double & { return pbvsTaskErrorThreshold_; });
+  ctl_.logger().addLogEntry("marker_pos", [this]() -> const Eigen::Vector3d & { return markerXCamera_.translation(); });
 
   mc_rtc::log::success("NavigateToHuman state start done");
 }
