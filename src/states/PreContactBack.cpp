@@ -18,59 +18,53 @@ void PreContactBack::start(mc_control::fsm::Controller & ctl_)
     ctl.processGrippers(config_("grippers"));
   }
 
-  // Load hand trajectory task and completion criteria
-  if(!config_.has("handTrajectoryTask")){
-    mc_rtc::log::error_and_throw<std::runtime_error>("PreContactBack start | handTrajectoryTask config entry missing");
-  }
-  handTrajectoryTask_ = mc_tasks::MetaTaskLoader::load<mc_tasks::BSplineTrajectoryTask>(ctl_.solver(), config_("handTrajectoryTask"));
-  if(!config_("handTrajectoryTask").has("completion")){
-    mc_rtc::log::error_and_throw<std::runtime_error>("PreContactBack start | completion config entry missing for handTrajectoryTask");
-  }
-  trajTaskCriteria_.configure(*handTrajectoryTask_, ctl_.solver().dt(), config_("handTrajectoryTask")("completion"));
-
-  // Adjust trajectory task bspline end point Z axis value to the human height
-  Eigen::Vector3d target = handTrajectoryTask_->spline().target();
-  if(!std::isnan(ctl.humanUpperBackLevel())){
-    // Perception based
-    target(2) = ctl.humanUpperBackLevel();
-  }else{
-    // Model based
-    target(2) = ctl.chairSeatHeight() + 0.3*ctl.humanHeight();
-  }
-  handTrajectoryTask_->spline().target(target);
-
-  // Add hand trajectory task to the solver
-  ctl_.solver().addTask(handTrajectoryTask_);
-
   // Load camera orientation task
-  if(!config_.has("lookAtHandTarget")){
-    mc_rtc::log::error_and_throw<std::runtime_error>("PreContactBack start | lookAtHandTarget config entry missing");
+  if(!config_.has("lookAtTarget")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("PreContactBack start | lookAtTarget config entry missing");
   }
-  lookAtHandTarget_ = mc_tasks::MetaTaskLoader::load<mc_tasks::LookAtTask>(ctl_.solver(), config_("lookAtHandTarget"));
-  if(!config_("lookAtHandTarget").has("targetPos")){
-    // Look at (adjusted) hand trajectory task target
-    lookAtHandTarget_->target(target); // TODO check that this target is expressed in world frame
+  lookAtTarget_ = mc_tasks::MetaTaskLoader::load<mc_tasks::LookAtSurfaceTask>(ctl_.solver(), config_("lookAtTarget"));
+  ctl_.solver().addTask(lookAtTarget_);
+
+  // Arm posture goals
+  if(!config_.has("armPosture1")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("PreContactBack start | armPosture1 config entry missing");
   }
-  ctl_.solver().addTask(lookAtHandTarget_);
+  config_("armPosture1", armPostureGoal1_);
+  if(!config_.has("armPosture2")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("PreContactBack start | armPosture2 config entry missing");
+  }
+  config_("armPosture2", armPostureGoal2_);
+
+  // Set first goal as target
+  ctl_.getPostureTask("pepper")->target(armPostureGoal1_);
 
   mc_rtc::log::info("PreContactBack start done");
 }
 
 bool PreContactBack::run(mc_control::fsm::Controller & ctl_)
 {
-  // State termination criteria
-  if(trajTaskCriteria_.completed(*handTrajectoryTask_)){
-    output("OK");
-    return true;
+  if(ctl_.getPostureTask("pepper")->eval().norm() < 0.7 && !goal1Reached_){
+    goal1Reached_ = true;
+    ctl_.getPostureTask("pepper")->target(armPostureGoal2_);
+    mc_rtc::log::success("First posture goal reached");
+  }else{
+    if(ctl_.getPostureTask("pepper")->eval().norm() < 0.7 && goal1Reached_){
+      if(!goal2Reached_){
+        goal2Reached_ = true;
+        mc_rtc::log::success("Second posture goal reached");
+      }
+      output("OK");
+      return true;
+    }
   }
+
   return false;
 }
 
 void PreContactBack::teardown(mc_control::fsm::Controller & ctl_)
 {
   // Remove added tasks
-  ctl_.solver().removeTask(lookAtHandTarget_);
-  ctl_.solver().removeTask(handTrajectoryTask_);
+  ctl_.solver().removeTask(lookAtTarget_);
   mc_rtc::log::info("PreContactBack teardown done");
 }
 

@@ -1,9 +1,7 @@
 #pragma once
 
-#include <mc_tasks/BSplineTrajectoryTask.h>
-#include <mc_control/CompletionCriteria.h>
 #include <mc_control/fsm/State.h>
-#include <mc_tasks/LookAtTask.h>
+#include <mc_tasks/LookAtSurfaceTask.h>
 
 struct PreContactBack : mc_control::fsm::State
 {
@@ -19,8 +17,11 @@ private:
   // State configuration
   mc_rtc::Configuration config_;
 
-  std::shared_ptr<mc_tasks::LookAtTask> lookAtHandTarget_;
-  std::shared_ptr<mc_tasks::BSplineTrajectoryTask> handTrajectoryTask_;
-  mc_control::CompletionCriteria trajTaskCriteria_;
+  std::shared_ptr<mc_tasks::LookAtSurfaceTask> lookAtTarget_;
 
+  // Arm posture goals
+  std::map<std::string, std::vector<double>> armPostureGoal1_;
+  bool goal1Reached_ = false;
+  std::map<std::string, std::vector<double>> armPostureGoal2_;
+  bool goal2Reached_ = false;
 };

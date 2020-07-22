@@ -187,48 +187,37 @@ configs:
   PreContactBack:
     grippers:
       l_gripper: 1.0
-    handTrajectoryTask:
-      type: bspline_trajectory
-      surface: LeftHand
-      duration: 3.0
-      dimWeight: [0.1, 0.1, 0.1, 1.0, 1.0, 1.0]
-      weight: 100.0
-      stiffness: 3.0
-      displaySamples: 10
-      completion:
-        OR:
-          - eval: 1e-3
-          - AND:
-            - timeout: 5.0
-            - speed: 1e-3
-      targetSurface:
-        surface: MobileBase
-        translation: [0.3, 0.7, 0.95] # end of the bspline
-        rotation: [-1.57, 0.0, 0.0]
-        # control points in target surface frame
-        controlPoints: [[0.1, 0.5, 0.8], [0.3, 0.6, 0.95]]
-        oriWaypoints: [[5.0, [-1.57, 0.0, 0.0]]]
-    lookAtHandTarget:
-      type: lookAt
+    armPosture1:
+      LShoulderRoll: [1.0]
+      LWristYaw: [-1.7]
+    armPosture2:
+      LShoulderPitch: [1.0]
+    lookAtTarget:
+      name: lookAtTarget
+      type: lookAtSurface
       body: kinect_depth_optical_frame
       bodyVector: [0.0, 0.0, 1.0]
-      weight: 100.0
-      stiffness: 3.0
+      surface: MobileBase
+      offset:
+        translation: [0.2, 0.4, 0.8]
+      weight: 10.0
+      stiffness: 1.0
       activeJoints:
         - HeadYaw
         - HeadPitch
 
   MakeContactBack:
     lookAtHand:
-        type: lookAtSurface
-        body: kinect_depth_optical_frame
-        bodyVector: [0.0, 0.0, 1.0]
-        surface: LeftHand
-        weight: 100.0
-        stiffness: 3.0
-        activeJoints:
-          - HeadYaw
-          - HeadPitch
+      name: lookAtHand
+      type: lookAtSurface
+      body: kinect_depth_optical_frame
+      bodyVector: [0.0, 0.0, 1.0]
+      surface: LeftHand
+      weight: 100.0
+      stiffness: 3.0
+      activeJoints:
+        - HeadYaw
+        - HeadPitch
     handTask:
       type: relBody6d
       body: l_wrist
@@ -295,6 +284,7 @@ uprightStanding:
 
 # Mobile base position task
 mobileBaseTask:
+  name: baseTask
   type: body6d
   robot: pepper
   body: Tibia
@@ -304,6 +294,7 @@ mobileBaseTask:
 
 # Relative CoM task
 comTask:
+  name: comTask
   type: com_relative_body
   body: base_link
   target: [0, 0, 0]
