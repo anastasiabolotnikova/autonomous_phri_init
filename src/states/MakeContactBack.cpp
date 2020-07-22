@@ -84,38 +84,38 @@ void MakeContactBack::start(mc_control::fsm::Controller & ctl_)
 
 bool MakeContactBack::run(mc_control::fsm::Controller & ctl_)
 {
-  if(!contactDetected_){
-    // Update feature vector
-    updateInputVector(ctl_, features_);
+  // Update feature vector
+  updateInputVector(ctl_, features_);
 
-    // Predict expected position tracking error
-    if(XGBoosterPredict(boosterHandle_, inputVec_, 0, 0, 0, &outLen_, &outVec_) == -1){
-      mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack run | XGBoosterPredict failure");
-    }
-    if(outLen_!=1){
-      mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack run | Wrong prediction result size {}", outLen_);
-    }
+  // Predict expected position tracking error
+  if(XGBoosterPredict(boosterHandle_, inputVec_, 0, 0, 0, &outLen_, &outVec_) == -1){
+    mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack run | XGBoosterPredict failure");
+  }
+  if(outLen_!=1){
+    mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack run | Wrong prediction result size {}", outLen_);
+  }
 
-    // Compute discrepancy
-    err_ = ctl_.robot().q()[monitoredJointIndex_][0] - ctl_.robot().encoderValues()[monitoredJointRefOrder_];
-    errExp_ = outVec_[0];
-    jointResidual_ = err_ - errExp_;
+  // Compute discrepancy
+  err_ = ctl_.robot().q()[monitoredJointIndex_][0] - ctl_.robot().encoderValues()[monitoredJointRefOrder_];
+  errExp_ = outVec_[0];
+  jointResidual_ = err_ - errExp_;
 
-    // Add residual signal to the filter window
-    medianFilter_.addSample(jointResidual_);
-    // Wait for the filter window to be filled
-    if(stateTime_/ctl_.solver().dt() > filterWindowSize_){
-      filterWindowFilled_ = true;
+  // Add residual signal to the filter window
+  medianFilter_.addSample(jointResidual_);
+  // Wait for the filter window to be filled
+  if(stateTime_/ctl_.solver().dt() > filterWindowSize_){
+    filterWindowFilled_ = true;
+  }
+  if(filterWindowFilled_){
+    // Compute residual signal filter window median
+    jointResidualFiltered_ = medianFilter_.getMedian();
+    // Check if contact is detected
+    if(std::abs(jointResidualFiltered_) > residualThreshold_){
+      contactDetected_ = true;
     }
-    if(filterWindowFilled_){
-      // Compute residual signal filter window median
-      jointResidualFiltered_ = medianFilter_.getMedian();
-      // Check if contact is detected
-      if(std::abs(jointResidualFiltered_) > residualThreshold_){
-        contactDetected_ = true;
-      }
-    }
-  }else{
+  }
+
+  if(contactDetected_){
     // In contact period countdown
     inContactDuration_ -= ctl_.solver().dt();
     // State termination criteria
@@ -167,11 +167,17 @@ void MakeContactBack::addPlot(mc_control::fsm::Controller & ctl_){
     mc_rtc::gui::plot::Y("-Threshold", [this]() { return -residualThreshold_; }, Color::Red)
   );
 
-  // add plot of measured and predicted errors
+  // Plot measured and predicted errors
+  ctl_.gui()->addPlot("Joint position tracking error",
+    mc_rtc::gui::plot::X("Time (s)", [this]() { return stateTime_; }),
+    mc_rtc::gui::plot::Y("err", [this]() { return err_; }, Color::Black),
+    mc_rtc::gui::plot::Y("expErr", [this]() { return errExp_; }, Color::Green)
+  );
 }
 
 void MakeContactBack::removePlot(mc_control::fsm::Controller & ctl_){
   ctl_.gui()->removePlot("Contact detection");
+  ctl_.gui()->removePlot("Joint position tracking error");
 }
 
 void MakeContactBack::addLog(mc_control::fsm::Controller & ctl_){
