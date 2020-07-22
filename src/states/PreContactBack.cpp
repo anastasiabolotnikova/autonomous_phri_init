@@ -43,12 +43,12 @@ void PreContactBack::start(mc_control::fsm::Controller & ctl_)
 
 bool PreContactBack::run(mc_control::fsm::Controller & ctl_)
 {
-  if(ctl_.getPostureTask("pepper")->eval().norm() < 0.7 && !goal1Reached_){
+  if(ctl_.getPostureTask("pepper")->eval().norm() < 1.0 && !goal1Reached_){
     goal1Reached_ = true;
     ctl_.getPostureTask("pepper")->target(armPostureGoal2_);
     mc_rtc::log::success("First posture goal reached");
   }else{
-    if(ctl_.getPostureTask("pepper")->eval().norm() < 0.7 && goal1Reached_){
+    if(ctl_.getPostureTask("pepper")->eval().norm() < 1.0 && goal1Reached_){
       if(!goal2Reached_){
         goal2Reached_ = true;
         mc_rtc::log::success("Second posture goal reached");

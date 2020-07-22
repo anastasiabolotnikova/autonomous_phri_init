@@ -9,10 +9,6 @@ using Color = mc_rtc::gui::Color;
 void MakeContactBack::configure(const mc_rtc::Configuration & config)
 {
   // Read state configuration
-  if(!config.has("moveInward")){
-    mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack start | moveInward config entry missing");
-  }
-  config("moveInward", moveInward_);
   if(!config.has("inContactDuration")){
     mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack start | inContactDuration config entry missing");
   }
@@ -45,25 +41,6 @@ void MakeContactBack::start(mc_control::fsm::Controller & ctl_)
   lookAtHand_ = mc_tasks::MetaTaskLoader::load<mc_tasks::LookAtSurfaceTask>(ctl.solver(), config_("lookAtHand"));
   ctl.solver().addTask(lookAtHand_);
 
-  // Load hand task
-  if(!config_.has("handTask")){
-    mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack start | handTask config entry missing");
-  }
-  handTask_ = mc_tasks::MetaTaskLoader::load<mc_tasks::RelativeEndEffectorTask>(ctl.solver(), config_("handTask"));
-  // Adjust hand task target to be at the upper back level
-  sva::PTransformd pose = handTask_->get_ef_pose();
-  if(!std::isnan(ctl.humanUpperBackLevel())){
-    // Perception based
-    pose.translation()(2) = ctl.humanUpperBackLevel();
-  }else{
-    // Model based
-    pose.translation()(2) = ctl.chairSeatHeight() + 0.3*ctl.humanHeight();
-  }
-  handTask_->set_ef_pose(pose);
-  // Set hand task target to move inward from the current position
-  handTask_->add_ef_pose(sva::PTransformd(Eigen::Vector3d(0, moveInward_, 0)));
-  ctl.solver().addTask(handTask_);
-
   // Get index of the joint for monitoring contact residual
   if(!config_.has("monitoredJoint")){
     mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack start | monitoredJoint config entry missing");
@@ -94,6 +71,13 @@ void MakeContactBack::start(mc_control::fsm::Controller & ctl_)
   // Add state plot and log
   addPlot(ctl_);
   addLog(ctl_);
+
+  // Load posture goal
+  if(!config_.has("armPostureGoal")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack start | armPostureGoal config entry missing");
+  }
+  config_("armPostureGoal", armPostureGoal_);
+  ctl_.getPostureTask("pepper")->target(armPostureGoal_);
 
   mc_rtc::log::success("MakeContactBack state start done");
 }
@@ -132,12 +116,6 @@ bool MakeContactBack::run(mc_control::fsm::Controller & ctl_)
       }
     }
   }else{
-    if(!handTaskReset_){
-      // Don't move arm after contact is detected
-      handTask_->dimWeight(stiffDimWeights_);
-      handTask_->reset();
-      handTaskReset_ = true;
-    }
     // In contact period countdown
     inContactDuration_ -= ctl_.solver().dt();
     // State termination criteria
@@ -154,9 +132,9 @@ bool MakeContactBack::run(mc_control::fsm::Controller & ctl_)
 void MakeContactBack::teardown(mc_control::fsm::Controller & ctl_)
 {
   ctl_.solver().removeTask(lookAtHand_);
-  ctl_.solver().removeTask(handTask_);
   removePlot(ctl_);
   removeLog(ctl_);
+  mc_rtc::log::info("MakeContactBack teardown done");
 }
 
 void MakeContactBack::updateInputVector(mc_control::fsm::Controller & ctl_, std::vector<std::pair<std::string, std::string>> &features){

@@ -33,10 +33,9 @@ private:
   // Camera orientation task
   std::shared_ptr<mc_tasks::LookAtSurfaceTask> lookAtHand_;
 
-  // Hand position task
-  std::shared_ptr<mc_tasks::RelativeEndEffectorTask> handTask_;
-  // By how much to move hand inward (Y axis)
-  double moveInward_;
+  // Posture target
+  std::map<std::string, std::vector<double>> armPostureGoal_;
+
   // Monitor if contact is detected
   bool contactDetected_ = false;
   // How long to stay in contact after it has been detected
