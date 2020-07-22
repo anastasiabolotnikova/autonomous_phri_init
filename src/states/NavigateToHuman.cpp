@@ -99,10 +99,10 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
   );
 
   // Add PBVS log entries
-  ctl_.logger().addLogEntry("PBVS_error", [this]() -> const Eigen::Vector6d & { return mobileBasePBVSTask_->eval(); });
-  ctl_.logger().addLogEntry("PBVS_norm", [this]() -> const double & { return mobileBasePBVSTask_->eval().norm(); });
-  ctl_.logger().addLogEntry("PBVS_threshold", [this]() -> const double & { return pbvsTaskErrorThreshold_; });
-  ctl_.logger().addLogEntry("marker_pos", [this]() -> const Eigen::Vector3d & { return markerXCamera_.translation(); });
+  ctl_.logger().addLogEntry("PBVS_error", [this]() -> const Eigen::Vector6d { return mobileBasePBVSTask_->eval(); });
+  ctl_.logger().addLogEntry("PBVS_norm", [this]() -> const double { return mobileBasePBVSTask_->eval().norm(); });
+  ctl_.logger().addLogEntry("PBVS_threshold", [this]() -> const double { return pbvsTaskErrorThreshold_; });
+  ctl_.logger().addLogEntry("marker_pos", [this]() -> const Eigen::Vector3d { return markerXCamera_.translation(); });
 
   mc_rtc::log::success("NavigateToHuman state start done");
 }
@@ -292,7 +292,7 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
     }
     // Human pelvis frame wrt world frame
     sva::PTransformd pelvisXCamera = humanBodyMarkers_[pbvsRefFrame_];
-    sva::PTransformd pelvisXWorld = pelvisXCamera * cameraXWorld_; // should cameraXWorld_ be updated here?
+    sva::PTransformd pelvisXWorld = pelvisXCamera * cameraXWorld_;
 
     // Check if human pelvis frame inclination angle agrees with sitting straight assumption
     double maxHumanIncAng = 35.0; // deg
