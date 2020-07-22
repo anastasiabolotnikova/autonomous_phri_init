@@ -111,7 +111,7 @@ bool MakeContactBack::run(mc_control::fsm::Controller & ctl_)
       // Compute residual signal filter window median
       jointResidualFiltered_ = medianFilter_.getMedian();
       // Check if contact is detected
-      if(std::abs(jointResidualFiltered_) > jointResidualFiltered_){
+      if(std::abs(jointResidualFiltered_) > residualThreshold_){
         contactDetected_ = true;
       }
     }
@@ -166,6 +166,8 @@ void MakeContactBack::addPlot(mc_control::fsm::Controller & ctl_){
     mc_rtc::gui::plot::Y("+Threshold", [this]() { return residualThreshold_; }, Color::Red),
     mc_rtc::gui::plot::Y("-Threshold", [this]() { return -residualThreshold_; }, Color::Red)
   );
+
+  // add plot of measured and predicted errors
 }
 
 void MakeContactBack::removePlot(mc_control::fsm::Controller & ctl_){
