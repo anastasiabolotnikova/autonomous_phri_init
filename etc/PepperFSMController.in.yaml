@@ -190,6 +190,11 @@ configs:
     armPosture1:
       LShoulderRoll: [1.0]
       LWristYaw: [-1.7]
+      RShoulderPitch: [1.57]
+      RShoulderRoll: [-0.17]
+      RElbowYaw: [1.22]
+      RElbowRoll: [0.52]
+      RWristYaw: [0.0]
     armPosture2:
       LShoulderPitch: [1.0]
     lookAtTarget:
@@ -253,6 +258,9 @@ configs:
 transitions:
 - [StandStraight, OK, NavigateToHuman, Strict]
 - [NavigateToHuman, OK, IntentCommunication, Strict]
+- [IntentCommunication, OK, PreContactBack, Strict]
+- [PreContactBack, OK, MakeContactBack, Strict]
+- [MakeContactBack, OK, Wait, Strict]
 
 # Initial state
 init: StandStraight
