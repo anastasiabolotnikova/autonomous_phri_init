@@ -50,6 +50,16 @@ void MakeContactBack::start(mc_control::fsm::Controller & ctl_)
     mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack start | handTask config entry missing");
   }
   handTask_ = mc_tasks::MetaTaskLoader::load<mc_tasks::RelativeEndEffectorTask>(ctl.solver(), config_("handTask"));
+  // Adjust hand task target to be at the upper back level
+  sva::PTransformd pose = handTask_->get_ef_pose();
+  if(!std::isnan(ctl.humanUpperBackLevel())){
+    // Perception based
+    pose.translation()(2) = ctl.humanUpperBackLevel();
+  }else{
+    // Model based
+    pose.translation()(2) = ctl.chairSeatHeight() + 0.3*ctl.humanHeight();
+  }
+  handTask_->set_ef_pose(pose);
   // Set hand task target to move inward from the current position
   handTask_->add_ef_pose(sva::PTransformd(Eigen::Vector3d(0, moveInward_, 0)));
   ctl.solver().addTask(handTask_);
@@ -185,12 +195,12 @@ void MakeContactBack::removePlot(mc_control::fsm::Controller & ctl_){
 }
 
 void MakeContactBack::addLog(mc_control::fsm::Controller & ctl_){
-  ctl_.logger().addLogEntry("Residual_raw", [this]() -> const double & { return jointResidual_; });
-  ctl_.logger().addLogEntry("Residual_filtered", [this]() -> const double & { return jointResidualFiltered_; });
-  ctl_.logger().addLogEntry("Residual_threshold+", [this]() -> const double & { return residualThreshold_; });
-  ctl_.logger().addLogEntry("Residual_threshold-", [this]() -> const double & { return -residualThreshold_; });
-  ctl_.logger().addLogEntry("Err_measured", [this]() -> const double & { return err_; });
-  ctl_.logger().addLogEntry("Err_predicted", [this]() -> const double & { return errExp_; });
+  ctl_.logger().addLogEntry("Residual_raw", [this]() { return jointResidual_; });
+  ctl_.logger().addLogEntry("Residual_filtered", [this]() { return jointResidualFiltered_; });
+  ctl_.logger().addLogEntry("Residual_threshold+", [this]() { return residualThreshold_; });
+  ctl_.logger().addLogEntry("Residual_threshold-", [this]() { return -residualThreshold_; });
+  ctl_.logger().addLogEntry("Err_measured", [this]() { return err_; });
+  ctl_.logger().addLogEntry("Err_predicted", [this]() { return errExp_; });
 }
 
 void MakeContactBack::removeLog(mc_control::fsm::Controller & ctl_){
