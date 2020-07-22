@@ -34,6 +34,10 @@ void PreContactBack::start(mc_control::fsm::Controller & ctl_)
     mc_rtc::log::error_and_throw<std::runtime_error>("PreContactBack start | armPosture2 config entry missing");
   }
   config_("armPosture2", armPostureGoal2_);
+  if(!config_.has("jointNearTargetDelta")){
+    mc_rtc::log::warning("PreContactBack start | jointNearTargetDelta config entry missing. Using default value: {}", delta_);
+  }
+  config_("jointNearTargetDelta", delta_);
 
   // Set first goal as target
   ctl_.getPostureTask("pepper")->target(armPostureGoal1_);
@@ -43,15 +47,17 @@ void PreContactBack::start(mc_control::fsm::Controller & ctl_)
 
 bool PreContactBack::run(mc_control::fsm::Controller & ctl_)
 {
-  if(ctl_.getPostureTask("pepper")->eval().norm() < 1.0 && !goal1Reached_){
+  auto & ctl = static_cast<PepperFSMController &>(ctl_);
+
+  if(ctl.jointNearTarget("pepper", "LShoulderRoll", delta_) && ctl.jointNearTarget("pepper", "LElbowRoll", delta_) && !goal1Reached_){
     goal1Reached_ = true;
     ctl_.getPostureTask("pepper")->target(armPostureGoal2_);
-    mc_rtc::log::success("First posture goal reached");
+    mc_rtc::log::success("PreContactBack run | First posture goal reached");
   }else{
-    if(ctl_.getPostureTask("pepper")->eval().norm() < 1.0 && goal1Reached_){
+    if(ctl.jointNearTarget("pepper", "LShoulderPitch", delta_) && goal1Reached_){
       if(!goal2Reached_){
         goal2Reached_ = true;
-        mc_rtc::log::success("Second posture goal reached");
+        mc_rtc::log::success("PreContactBack run | Second posture goal reached");
       }
       output("OK");
       return true;

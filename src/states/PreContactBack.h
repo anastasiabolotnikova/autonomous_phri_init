@@ -24,4 +24,5 @@ private:
   bool goal1Reached_ = false;
   std::map<std::string, std::vector<double>> armPostureGoal2_;
   bool goal2Reached_ = false;
+  double delta_ = 0.05;
 };

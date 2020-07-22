@@ -169,3 +169,11 @@ void PepperFSMController::processGrippers(const mc_rtc::Configuration &gripper_c
     }
   }
 }
+
+bool PepperFSMController::jointNearTarget(std::string robotName, std::string jointName, double delta){
+  unsigned int jointIndex = robots().robot(robotName).jointIndexByName(jointName);
+  if(std::abs(getPostureTask(robotName)->posture()[jointIndex][0] - robots().robot(robotName).mbc().q[jointIndex][0]) < delta){
+    return true;
+  }
+  return false;
+}

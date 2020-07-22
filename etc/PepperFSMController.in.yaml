@@ -135,7 +135,7 @@ configs:
       completion:
         eval: 0.1
     targetXMarker:
-      translation: [0.0, 0.15, -0.55]
+      translation: [0.0, 0.15, -0.45]
       rotation: [3.14159, -1.570796, 0]
     visionLost: 0.5 #s
     ibvsTask:
@@ -198,6 +198,7 @@ configs:
       RWristYaw: [0.0]
     armPosture2:
       LShoulderPitch: [0.3]
+    jointNearTargetDelta: 0.05
     lookAtTarget:
       name: lookAtTarget
       type: lookAtSurface

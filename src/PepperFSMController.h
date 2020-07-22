@@ -37,6 +37,8 @@ struct PepperFSMController_DLLAPI PepperFSMController : public mc_control::fsm::
 
     void processGrippers(const mc_rtc::Configuration &gripper_config);
 
+    bool jointNearTarget(std::string robotName, std::string jointName, double delta);
+
 private:
     // Controller configuration
     mc_rtc::Configuration config_;
