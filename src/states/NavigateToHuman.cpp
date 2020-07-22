@@ -114,7 +114,7 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
   // State termination criteria
   if(addVSTasksToSolver_ && pbvsTaskCriteria_.completed(*mobileBasePBVSTask_)
       && !firstStateRun_ && firstROSUpdateDone_ && taskErrorUpdated_){
-    mc_rtc::log::info("mobileBasePBVSTask eval: {}", mobileBasePBVSTask_->eval().norm());
+    mc_rtc::log::info("NavigateToHuman run | mobileBasePBVSTask eval: {}", mobileBasePBVSTask_->eval().norm());
     // Extra protection to prevent robot from moving mobile base
     if(addVSTasksToSolver_){
       // Remove PBVS task
@@ -136,7 +136,6 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
   if(ctl.pepperHasBumpers()){
     for(const auto bn : ctl.bumperSensorNames()){
       auto & bumper = ctl_.robot().device<mc_pepper::TouchSensor>(bn);
-      // TODO check if contact is detected here
       if(bumper.touch()){
         mobileBaseStuck_ = true;
       }
@@ -222,6 +221,8 @@ void NavigateToHuman::teardown(mc_control::fsm::Controller & ctl_)
   ctl_.gui()->removeCategory({"NavigateToHuman", "Frames"});
   // Remove added log entries
   ctl_.logger().removeLogEntry("PBVS_error");
+  ctl_.logger().removeLogEntry("PBVS_norm");
+  ctl_.logger().removeLogEntry("PBVS_threshold");
   ctl_.logger().removeLogEntry("marker_pos");
   if(addVSTasksToSolver_){
     // Remove PBVS task
