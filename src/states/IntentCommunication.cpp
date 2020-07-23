@@ -129,6 +129,7 @@ void IntentCommunication::start(mc_control::fsm::Controller & ctl_)
 
     // Add head to tablet angle to log
     ctl_.logger().addLogEntry("headToTabletAngle", [this]() -> const double { return headToTabletAngle_; });
+    ctl_.logger().addLogEntry("TF_headIntent", [this]() -> const sva::PTransformd { return humanHeadXCamera_; });
   }
 
   mc_rtc::log::success("IntentCommunication state start done");
@@ -138,12 +139,9 @@ bool IntentCommunication::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<PepperFSMController &>(ctl_);
 
-  // Update camera transform
-  cameraXWorld_ = ctl_.realRobot().bodyPosW(ctl.camOpticalFrame());
-
   // Update human head transform
   if(humanBodyMarkers_.find(ibvsFrameID_) == humanBodyMarkers_.end()){
-    mc_rtc::log::warning("Body frame {} not found", ibvsFrameID_);
+    mc_rtc::log::warning("IntentCommunication run | Body frame {} not found", ibvsFrameID_);
   }
   humanHeadXCamera_ = humanBodyMarkers_[ibvsFrameID_];
 
@@ -153,24 +151,20 @@ bool IntentCommunication::run(mc_control::fsm::Controller & ctl_)
     ibvsTask_->error(humanHeadXCamera_.translation());
   }
 
+  // Update camera transform
+  cameraXWorld_ = ctl_.realRobot().bodyPosW(ctl.camOpticalFrame());
+  // Human head frame in world frame
+  humanHeadXWorld_ = humanHeadXCamera_ * cameraXWorld_;
+  // Normalized vector from human head frame origin to robot tablet frame origin
+  tabletXWorld_ = ctl_.realRobot().bodyPosW("tablet");
+  headToTablet_ = tabletXWorld_.translation() - humanHeadXWorld_.translation();
+  headToTablet_.normalize();
+  // Compute angle between headToTablet and orientation of Y axis of head frame
+  headToTabletAngle_ = acos(headToTablet_.dot(humanHeadXWorld_.rotation().transpose().col(1)));
   // Monitor human head, check if it was oriented to face the tablet at least once
   if(monitorHeadOrientation_ && firstROSUpdateDone_ && !humanLookedAtTablet_){
-    // Human head frame in world frame
-    humanHeadXWorld_ = humanHeadXCamera_ * cameraXWorld_;
-    // Normalized vector from human head frame origin to robot tablet frame origin
-    tabletXWorld_ = ctl_.realRobot().bodyPosW("tablet");
-    headToTablet_ = tabletXWorld_.translation() - humanHeadXWorld_.translation();
-    headToTablet_.normalize();
-    // Compute angle between headToTablet and orientation of Y axis of head frame
-    headToTabletAngle_ = acos(headToTablet_.dot(humanHeadXWorld_.rotation().transpose().col(1)));
     if(headToTabletAngle_ < headToTabletAngleThreshold_){
       humanLookedAtTablet_ =  true;
-      if(ctl.pepperHasSpeakers()){
-        auto & speakers = ctl_.robot().device<mc_pepper::Speaker>("Speakers");
-        speakers.say(textToSayEnd_);
-      }else{
-        mc_rtc::log::warning("Cannot say '{}'. Robot has no speakers", textToSayEnd_);
-      }
     }
   }
 
@@ -181,10 +175,15 @@ bool IntentCommunication::run(mc_control::fsm::Controller & ctl_)
 
   // Exit the state if comunication is done and human has looked at the tablet
   if(communacationDone_ && humanLookedAtTablet_){
-    // Reset tablet screen
-    if(ctl.pepperHasTablet()){
-      auto & tablet = ctl_.robot().device<mc_pepper::VisualDisplay>("Tablet");
-      tablet.reset(true);
+    if(!textToSayEndSaid_){
+      // Command text to sya
+      if(ctl.pepperHasSpeakers()){
+        auto & speakers = ctl_.robot().device<mc_pepper::Speaker>("Speakers");
+        speakers.say(textToSayEnd_);
+      }else{
+        mc_rtc::log::warning("Cannot say '{}'. Robot has no speakers", textToSayEnd_);
+      }
+      textToSayEndSaid_ = true;
     }
     // Take on final  posture if defined
     if(config_.has("finalrightArmPosition")){
@@ -202,6 +201,7 @@ bool IntentCommunication::run(mc_control::fsm::Controller & ctl_)
 
 void IntentCommunication::teardown(mc_control::fsm::Controller & ctl_)
 {
+  auto & ctl = static_cast<PepperFSMController &>(ctl_);
   // Stop ROS thread
   stateNeedsROS_ = false;
   rosThread_.join();
@@ -213,6 +213,7 @@ void IntentCommunication::teardown(mc_control::fsm::Controller & ctl_)
   ctl_.getPostureTask("pepper")->reset();
   // Remove added log entry
   ctl_.logger().removeLogEntry("headToTabletAngle");
+  ctl_.logger().removeLogEntry("TF_headIntent");
   // Remove GUI elements
   ctl_.gui()->removeCategory({"IntentCommunication", "Frames"});
   if(monitorHeadOrientation_){

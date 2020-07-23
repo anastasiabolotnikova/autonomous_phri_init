@@ -23,7 +23,7 @@ struct IntentCommunication : mc_control::fsm::State
 
     // ROS topic subscriber callback
     void updateVisualMarkerPose(const visualization_msgs::MarkerArray::ConstPtr& msg);
-    
+
     // Full state configuration
     mc_rtc::Configuration config_;
 
@@ -40,6 +40,7 @@ struct IntentCommunication : mc_control::fsm::State
     // Text to play from speakers
     std::string textToSayStart_ = "";
     std::string textToSayEnd_ = "";
+    bool textToSayEndSaid_ = false;
 
     // Camera orientation task
     std::shared_ptr<mc_tasks::GazeTask> ibvsTask_;
