@@ -19,10 +19,9 @@ private:
 
   std::shared_ptr<mc_tasks::LookAtSurfaceTask> lookAtTarget_;
 
-  // Arm posture goals
-  std::map<std::string, std::vector<double>> armPostureGoal1_;
-  bool goal1Reached_ = false;
-  std::map<std::string, std::vector<double>> armPostureGoal2_;
-  bool goal2Reached_ = false;
+  // Sequential posture goals
+  std::vector<std::map<std::string, std::vector<double>>> sequentialPostureGoals_;
+  std::vector<std::string> currentPostureGoalJoints_;
+  unsigned int currentPostureGoal_ = 0;
   double delta_ = 0.05;
 };

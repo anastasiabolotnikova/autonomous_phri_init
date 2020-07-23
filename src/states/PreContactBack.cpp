@@ -25,22 +25,19 @@ void PreContactBack::start(mc_control::fsm::Controller & ctl_)
   lookAtTarget_ = mc_tasks::MetaTaskLoader::load<mc_tasks::LookAtSurfaceTask>(ctl_.solver(), config_("lookAtTarget"));
   ctl_.solver().addTask(lookAtTarget_);
 
-  // Arm posture goals
-  if(!config_.has("armPosture1")){
-    mc_rtc::log::error_and_throw<std::runtime_error>("PreContactBack start | armPosture1 config entry missing");
+  // Posture goals
+  if(!config_.has("sequentialPostureGoals")){
+    mc_rtc::log::error_and_throw<std::runtime_error>("PreContactBack start | sequentialPostureGoals config entry missing");
   }
-  config_("armPosture1", armPostureGoal1_);
-  if(!config_.has("armPosture2")){
-    mc_rtc::log::error_and_throw<std::runtime_error>("PreContactBack start | armPosture2 config entry missing");
-  }
-  config_("armPosture2", armPostureGoal2_);
+  config_("sequentialPostureGoals", sequentialPostureGoals_);
   if(!config_.has("jointNearTargetDelta")){
     mc_rtc::log::warning("PreContactBack start | jointNearTargetDelta config entry missing. Using default value: {}", delta_);
   }
   config_("jointNearTargetDelta", delta_);
 
   // Set first goal as target
-  ctl_.getPostureTask("pepper")->target(armPostureGoal1_);
+  ctl_.getPostureTask("pepper")->target(sequentialPostureGoals_[currentPostureGoal_]);
+  currentPostureGoalJoints_ = ctl.mapKeys(sequentialPostureGoals_[currentPostureGoal_]);
 
   mc_rtc::log::info("PreContactBack start done");
 }
@@ -49,21 +46,21 @@ bool PreContactBack::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<PepperFSMController &>(ctl_);
 
-  if(ctl.jointNearTarget("pepper", "LShoulderRoll", delta_) && ctl.jointNearTarget("pepper", "LElbowRoll", delta_) && !goal1Reached_){
-    goal1Reached_ = true;
-    ctl_.getPostureTask("pepper")->target(armPostureGoal2_);
-    mc_rtc::log::success("PreContactBack run | First posture goal reached");
-  }else{
-    if(ctl.jointNearTarget("pepper", "LShoulderPitch", delta_) && goal1Reached_){
-      if(!goal2Reached_){
-        goal2Reached_ = true;
-        mc_rtc::log::success("PreContactBack run | Second posture goal reached");
-      }
+  // Check if current posture goal is reached
+  if(ctl.jointsNearTarget("pepper", currentPostureGoalJoints_, delta_)){
+    // When reached set next goal if exists
+    currentPostureGoal_++;
+    mc_rtc::log::info("PreContactBack run | Posture goal {} reached", currentPostureGoal_);
+    if(currentPostureGoal_ < sequentialPostureGoals_.size()){
+      ctl_.getPostureTask("pepper")->target(sequentialPostureGoals_[currentPostureGoal_]);
+      currentPostureGoalJoints_ = ctl.mapKeys(sequentialPostureGoals_[currentPostureGoal_]);
+    }else{
+      // Exit state when all goals are reached
+      mc_rtc::log::info("PreContactBack run | All posture goals reached");
       output("OK");
       return true;
     }
   }
-
   return false;
 }
 

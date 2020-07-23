@@ -187,17 +187,18 @@ configs:
   PreContactBack:
     grippers:
       l_gripper: 1.0
-    armPosture1:
-      LShoulderRoll: [1.0]
-      LElbowRoll: [-0.3]
-      LWristYaw: [-0.6]
-      RShoulderPitch: [1.57]
-      RShoulderRoll: [-0.17]
-      RElbowYaw: [1.22]
-      RElbowRoll: [0.52]
-      RWristYaw: [0.0]
-    armPosture2:
-      LShoulderPitch: [0.3]
+    sequentialPostureGoals:
+      armAway:
+        LShoulderRoll: [1.0]
+        LElbowRoll: [-0.3]
+        LWristYaw: [-0.6]
+        RShoulderPitch: [1.57]
+        RShoulderRoll: [-0.17]
+        RElbowYaw: [1.22]
+        RElbowRoll: [0.1]
+        RWristYaw: [0.0]
+      armUp:
+        LShoulderPitch: [0.3]
     jointNearTargetDelta: 0.05
     lookAtTarget:
       name: lookAtTarget
@@ -229,7 +230,6 @@ configs:
       LShoulderRoll: [0.1]
       LWristYaw: [-0.9]
     inContactDuration: 2.0 #s
-    stiffDimWeights: [100.0, 100.0, 100.0, 100.0, 100.0, 100.0]
     monitoredJoint: LShoulderRoll
     residualThreshold: 0.015 # rad
     pathToModel: "@MC_STATES_INSTALL_PREFIX@/models/LShoulderRoll.model"

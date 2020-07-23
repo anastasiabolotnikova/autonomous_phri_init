@@ -170,10 +170,21 @@ void PepperFSMController::processGrippers(const mc_rtc::Configuration &gripper_c
   }
 }
 
-bool PepperFSMController::jointNearTarget(std::string robotName, std::string jointName, double delta){
-  unsigned int jointIndex = robots().robot(robotName).jointIndexByName(jointName);
-  if(std::abs(getPostureTask(robotName)->posture()[jointIndex][0] - robots().robot(robotName).mbc().q[jointIndex][0]) < delta){
-    return true;
+bool PepperFSMController::jointsNearTarget(std::string robotName, std::vector<std::string> jointNames, double delta){
+  bool result = true;
+  for (size_t i = 0; i < jointNames.size(); i++) {
+    unsigned int jointIndex = robots().robot(robotName).jointIndexByName(jointNames[i]);
+    if(std::abs(getPostureTask(robotName)->posture()[jointIndex][0] - robots().robot(robotName).mbc().q[jointIndex][0]) > delta){
+      result = false;
+    }
   }
-  return false;
+  return result;
+}
+
+std::vector<std::string> PepperFSMController::mapKeys(std::map<std::string, std::vector<double>> const& map) {
+  std::vector<std::string> keys;
+  for (auto const& element : map) {
+    keys.push_back(element.first);
+  }
+  return keys;
 }
