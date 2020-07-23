@@ -292,6 +292,24 @@ configs:
       [RElbowRoll, torque],
       [RElbowRoll, alphaD]
 
+  RemoveContacts:
+    grippersStart:
+      r_gripper: 1.0 # first open right gripper
+    sequentialPostureGoals:
+      unbendElbow:
+        RElbowRoll: [0.1]
+      moveAwayShoulder:
+        LShoulderRoll: [0.17]
+      armDown:
+        LShoulderRoll: [1.57]
+        LElbowRoll: [-0.52]
+        LWristYaw: [0.0]
+    grippersEnd:
+      l_gripper: 0.7
+      r_gripper: 0.7
+    textToSayStart: "You can now remove your hand from mine"
+    textToSayEnd: "Thank you for your participation!"
+
   # Empty state to test frame operations
   FrameTest:
     pelvisXWorld:
