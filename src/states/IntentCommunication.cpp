@@ -62,7 +62,7 @@ void IntentCommunication::start(mc_control::fsm::Controller & ctl_)
     auto & speakers = ctl_.robot().device<mc_pepper::Speaker>("Speakers");
     speakers.say(textToSayStart_);
   }else{
-    mc_rtc::log::warning("Cannot say '{}'. Robot has no speakers", textToSayStart_);
+    mc_rtc::log::warning("IntentCommunication start | Cannot say '{}'. Robot has no speakers", textToSayStart_);
   }
 
   // Load IBVS task
@@ -97,7 +97,7 @@ void IntentCommunication::start(mc_control::fsm::Controller & ctl_)
 
   // Start ROS topic monitoring in a separate thread
   rosThread_ = std::thread(std::bind(&IntentCommunication::monitorROSTopic, this));
-  mc_rtc::log::info("ROS thread started"); 
+  mc_rtc::log::info("ROS thread started");
 
   // Add GUI elements
   ctl_.gui()->addElement({"IntentCommunication", "Frames"},
