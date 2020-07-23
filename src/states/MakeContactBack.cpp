@@ -21,10 +21,6 @@ void MakeContactBack::configure(const mc_rtc::Configuration & config)
     mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack start | residualThreshold config entry missing");
   }
   config("residualThreshold", residualThreshold_);
-  if(!config.has("stiffDimWeights")){
-    mc_rtc::log::error_and_throw<std::runtime_error>("MakeContactBack start | stiffDimWeights config entry missing");
-  }
-  config("stiffDimWeights", stiffDimWeights_);
 
   // Load state config
   config_.load(config);
@@ -181,21 +177,21 @@ void MakeContactBack::removePlot(mc_control::fsm::Controller & ctl_){
 }
 
 void MakeContactBack::addLog(mc_control::fsm::Controller & ctl_){
-  ctl_.logger().addLogEntry("Residual_raw", [this]() { return jointResidual_; });
-  ctl_.logger().addLogEntry("Residual_filtered", [this]() { return jointResidualFiltered_; });
-  ctl_.logger().addLogEntry("Residual_threshold+", [this]() { return residualThreshold_; });
-  ctl_.logger().addLogEntry("Residual_threshold-", [this]() { return -residualThreshold_; });
-  ctl_.logger().addLogEntry("Err_measured", [this]() { return err_; });
-  ctl_.logger().addLogEntry("Err_predicted", [this]() { return errExp_; });
+  ctl_.logger().addLogEntry(monitoredJointName_ + "_residual_raw", [this]() { return jointResidual_; });
+  ctl_.logger().addLogEntry(monitoredJointName_ + "_residual_filtered", [this]() { return jointResidualFiltered_; });
+  ctl_.logger().addLogEntry(monitoredJointName_ + "_residual_threshold+", [this]() { return residualThreshold_; });
+  ctl_.logger().addLogEntry(monitoredJointName_ + "_residual_threshold-", [this]() { return -residualThreshold_; });
+  ctl_.logger().addLogEntry(monitoredJointName_ + "_err_measured", [this]() { return err_; });
+  ctl_.logger().addLogEntry(monitoredJointName_ + "_err_predicted", [this]() { return errExp_; });
 }
 
 void MakeContactBack::removeLog(mc_control::fsm::Controller & ctl_){
-  ctl_.logger().removeLogEntry("Residual_raw");
-  ctl_.logger().removeLogEntry("Residual_filtered");
-  ctl_.logger().removeLogEntry("Residual_threshold+");
-  ctl_.logger().removeLogEntry("Residual_threshold-");
-  ctl_.logger().removeLogEntry("Err_measured");
-  ctl_.logger().removeLogEntry("Err_predicted");
+  ctl_.logger().removeLogEntry(monitoredJointName_ + "_residual_raw");
+  ctl_.logger().removeLogEntry(monitoredJointName_ + "_residual_filtered");
+  ctl_.logger().removeLogEntry(monitoredJointName_ + "_residual_threshold+");
+  ctl_.logger().removeLogEntry(monitoredJointName_ + "_residual_threshold-");
+  ctl_.logger().removeLogEntry(monitoredJointName_ + "_err_measured");
+  ctl_.logger().removeLogEntry(monitoredJointName_ + "_err_predicted");
 }
 
 EXPORT_SINGLE_STATE("MakeContactBack", MakeContactBack)

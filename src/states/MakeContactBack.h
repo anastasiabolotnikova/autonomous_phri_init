@@ -42,8 +42,6 @@ private:
   double inContactDuration_;
   // Reset hand task target after contact is detected
   bool handTaskReset_ = false;
-  // End effector task weight after contact is detected
-  Eigen::Vector6d stiffDimWeights_;
 
   // XGBoost predictor
   BoosterHandle boosterHandle_;
