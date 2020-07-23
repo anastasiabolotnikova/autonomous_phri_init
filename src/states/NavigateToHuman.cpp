@@ -104,6 +104,9 @@ void NavigateToHuman::start(mc_control::fsm::Controller & ctl_)
   ctl_.logger().addLogEntry("PBVS_threshold", [this]() -> const double { return pbvsTaskErrorThreshold_; });
   ctl_.logger().addLogEntry("marker_pos", [this]() -> const Eigen::Vector3d { return markerXCamera_.translation(); });
 
+  ctl_.logger().addLogEntry("TF_pelvis", [this]() -> const sva::PTransformd { return markerXCamera_; });
+  ctl_.logger().addLogEntry("TF_head", [this]() -> const sva::PTransformd { return headXCamera_; });
+
   mc_rtc::log::success("NavigateToHuman state start done");
 }
 
@@ -169,6 +172,7 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
       if(humanBodyMarkers_.find(ibvsRefFrame_) == humanBodyMarkers_.end()){
         mc_rtc::log::warning("NavigateToHuman run | Body frame for IBVS {} not found", ibvsRefFrame_);
       }else{
+        headXCamera_ = humanBodyMarkers_[ibvsRefFrame_]; // for log
         ibvsTask_->error(humanBodyMarkers_[ibvsRefFrame_].translation());
       }
 
@@ -224,6 +228,8 @@ void NavigateToHuman::teardown(mc_control::fsm::Controller & ctl_)
   ctl_.logger().removeLogEntry("PBVS_norm");
   ctl_.logger().removeLogEntry("PBVS_threshold");
   ctl_.logger().removeLogEntry("marker_pos");
+  ctl_.logger().removeLogEntry("TF_pelvis");
+  ctl_.logger().removeLogEntry("TF_head");
   if(addVSTasksToSolver_){
     // Remove PBVS task
     ctl_.solver().removeTask(mobileBasePBVSTask_);

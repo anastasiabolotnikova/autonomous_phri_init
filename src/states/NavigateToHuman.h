@@ -139,4 +139,6 @@ struct NavigateToHuman : mc_control::fsm::State
 
     // ROS node handle
     std::shared_ptr<ros::NodeHandle> nh_;
+
+    sva::PTransformd headXCamera_ = sva::PTransformd::Identity();
 };
