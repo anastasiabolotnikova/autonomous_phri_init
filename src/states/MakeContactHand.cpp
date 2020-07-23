@@ -80,6 +80,7 @@ void MakeContactHand::start(mc_control::fsm::Controller & ctl_)
 
 bool MakeContactHand::run(mc_control::fsm::Controller & ctl_)
 {
+  auto & ctl = static_cast<PepperFSMController &>(ctl_);
   // Update feature vector
   updateInputVector(ctl_, features_);
 
@@ -114,6 +115,9 @@ bool MakeContactHand::run(mc_control::fsm::Controller & ctl_)
   if(contactDetected_){
     if(!postureTaskReset_){
       ctl_.getPostureTask("pepper")->reset();
+      if(config_.has("grippers")){
+        ctl.processGrippers(config_("grippers"));
+      }
       postureTaskReset_ = true;
     }
     // In contact period countdown
