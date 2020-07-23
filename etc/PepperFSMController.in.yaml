@@ -188,8 +188,7 @@ configs:
     grippers:
       l_gripper: 1.0
     sequentialPostureGoals:
-      armAway:
-        LShoulderRoll: [1.0]
+      - LShoulderRoll: [1.0]
         LElbowRoll: [-0.3]
         LWristYaw: [-0.6]
         RShoulderPitch: [1.57]
@@ -197,8 +196,7 @@ configs:
         RElbowYaw: [1.22]
         RElbowRoll: [0.1]
         RWristYaw: [0.0]
-      armUp:
-        LShoulderPitch: [0.3]
+      - LShoulderPitch: [0.3]
     jointNearTargetDelta: 0.05
     lookAtTarget:
       name: lookAtTarget
@@ -257,7 +255,7 @@ configs:
       offset:
         translation: [0.2, -0.4, 0.4]
       weight: 10.0
-      stiffness: 1.0
+      stiffness: 3.0
       activeJoints:
         - HeadYaw
         - HeadPitch
@@ -276,11 +274,11 @@ configs:
       offset:
         translation: [0.2, -0.4, 0.4]
       weight: 10.0
-      stiffness: 1.0
+      stiffness: 3.0
       activeJoints:
         - HeadYaw
         - HeadPitch
-    armPosture:
+    armPostureGoal:
       RElbowRoll: [1.5]
     inContactDuration: 2.0 #s
     monitoredJoint: RElbowRoll
@@ -290,18 +288,23 @@ configs:
     features:
       [[RElbowRoll, alpha],
       [RElbowRoll, torque],
-      [RElbowRoll, alphaD]
+      [RElbowRoll, alphaD]]
 
   RemoveContacts:
     grippersStart:
       r_gripper: 1.0 # first open right gripper
     sequentialPostureGoals:
-      unbendElbow:
-        RElbowRoll: [0.1]
-      moveAwayShoulder:
+      - RElbowRoll: [0.1]
+      - RWristYaw: [0.0]
+      - LShoulderRoll: [1.0]
+        RShoulderPitch: [1.57]
+        RShoulderRoll: [-0.17]
+        RElbowYaw: [1.22]
+        RElbowRoll: [0.52]
+        HeadYaw: [0.25]
+        HeadPitch: [0]
+      - LShoulderPitch: [1.57]
         LShoulderRoll: [0.17]
-      armDown:
-        LShoulderRoll: [1.57]
         LElbowRoll: [-0.52]
         LWristYaw: [0.0]
     grippersEnd:
