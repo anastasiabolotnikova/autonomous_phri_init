@@ -133,7 +133,7 @@ configs:
       stiffness: 3.0
       dimWeight: [0.0, 0.0, 1.0, 1.0, 1.0, 0.0]
       completion:
-        eval: 0.1
+        eval: 0.08
     targetXMarker:
       translation: [0.0, 0.15, -0.45]
       rotation: [3.14159, -1.570796, 0]
@@ -180,7 +180,7 @@ configs:
     headToTabletAngleThreshold: 1.0 #rad
     rosRate: 30 #fps
     rosTopic: /body_tracking_data
-    imageToDisplay: backContactPlan.png
+    imageToDisplay: backContactPlan.png # Note: copy image into /opt/aldebaran/www/apps/media/html/ on the robot
     textToSayStart: 'Hello. My name is Pepper. I am here to help. Please look at my screen'
     textToSayEnd: 'I will now carefully touch your back as is shown on my screen. Are you ready?'
 
@@ -260,7 +260,8 @@ configs:
         - HeadYaw
         - HeadPitch
     textToSay: "Now, please give me your hand as is shown on my screen"
-    imageToDisplay: "contactHand.png"
+    imageToDisplay: handContactPlan.png
+    # Note: copy image into /opt/aldebaran/www/apps/media/html/ on the robot
 
   MakeContactHand:
     grippers:
@@ -297,6 +298,7 @@ configs:
       - RElbowRoll: [0.1]
       - RWristYaw: [0.0]
       - LShoulderRoll: [1.0]
+        LShoulderPitch: [0.7]
         RShoulderPitch: [1.57]
         RShoulderRoll: [-0.17]
         RElbowYaw: [1.22]
@@ -324,11 +326,14 @@ configs:
 
 # Transitions map
 transitions:
-- [StandStraight, OK, NavigateToHuman, Strict]
-- [NavigateToHuman, OK, IntentCommunication, Strict]
-- [IntentCommunication, OK, PreContactBack, Strict]
-- [PreContactBack, OK, MakeContactBack, Strict]
-- [MakeContactBack, OK, Wait, Strict]
+- [StandStraight, OK, NavigateToHuman, Auto]
+- [NavigateToHuman, OK, IntentCommunication, Auto]
+- [IntentCommunication, OK, PreContactBack, Auto]
+- [PreContactBack, OK, MakeContactBack, Auto]
+- [MakeContactBack, OK, PreContactHand, Auto]
+- [PreContactHand, OK, MakeContactHand, Auto]
+- [MakeContactHand, OK, RemoveContacts, Auto]
+- [RemoveContacts, OK, HalfSitting, Auto]
 
 # Initial state
 init: StandStraight
