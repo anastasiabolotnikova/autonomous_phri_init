@@ -40,8 +40,8 @@ private:
   bool contactDetected_ = false;
   // How long to stay in contact after it has been detected
   double inContactDuration_;
-  // Reset hand task target after contact is detected
-  bool handTaskReset_ = false;
+  // Reset posture task target after contact is detected
+  bool postureTaskReset_ = false;
 
   // XGBoost predictor
   BoosterHandle boosterHandle_;

@@ -112,6 +112,10 @@ bool MakeContactHand::run(mc_control::fsm::Controller & ctl_)
   }
 
   if(contactDetected_){
+    if(!postureTaskReset_){
+      ctl_.getPostureTask("pepper")->reset();
+      postureTaskReset_ = true;
+    }
     // In contact period countdown
     inContactDuration_ -= ctl_.solver().dt();
     // State termination criteria
