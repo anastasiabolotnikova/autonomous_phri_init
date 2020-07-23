@@ -5,6 +5,7 @@ add_fsm_state_simple(IntentCommunication)
 add_fsm_state_simple(PreContactBack)
 add_fsm_state_simple(MakeContactBack)
 add_fsm_state_simple(PreContactHand)
+add_fsm_state_simple(MakeContactHand)
 
 add_fsm_data_directory(data)
 install(DIRECTORY models DESTINATION "${MC_STATES_INSTALL_PREFIX}" FILES_MATCHING REGEX ".*.model$")

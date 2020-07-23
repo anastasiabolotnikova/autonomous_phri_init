@@ -264,6 +264,34 @@ configs:
     textToSay: "Now, please give me your hand as is shown on my screen"
     imageToDisplay: "contactHand.png"
 
+  MakeContactHand:
+    grippers:
+      r_gripper: 0.5 #when contact detected
+    lookAtTarget:
+      name: lookAtTarget
+      type: lookAtSurface
+      body: kinect_depth_optical_frame
+      bodyVector: [0.0, 0.0, 1.0]
+      surface: MobileBase
+      offset:
+        translation: [0.2, -0.4, 0.4]
+      weight: 10.0
+      stiffness: 1.0
+      activeJoints:
+        - HeadYaw
+        - HeadPitch
+    armPosture:
+      RElbowRoll: [1.5]
+    inContactDuration: 2.0 #s
+    monitoredJoint: RElbowRoll
+    residualThreshold: 0.015 # rad
+    pathToModel: "@MC_STATES_INSTALL_PREFIX@/models/RElbowRoll.model"
+    # Order of features is important
+    features:
+      [[RElbowRoll, alpha],
+      [RElbowRoll, torque],
+      [RElbowRoll, alphaD]
+
   # Empty state to test frame operations
   FrameTest:
     pelvisXWorld:
