@@ -31,6 +31,7 @@ void RemoveContacts::start(mc_control::fsm::Controller & ctl_)
 
   // Set first goal as target
   ctl_.getPostureTask("pepper")->target(sequentialPostureGoals_[currentPostureGoal_]);
+  ctl_.getPostureTask("pepper")->stiffness(3.0);
   currentPostureGoalJoints_ = ctl.mapKeys(sequentialPostureGoals_[currentPostureGoal_]);
 
   // Text to say
@@ -79,6 +80,11 @@ bool RemoveContacts::run(mc_control::fsm::Controller & ctl_)
 void RemoveContacts::teardown(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<PepperFSMController &>(ctl_);
+  // Set target gripper opening
+  if(config_.has("grippersEnd")){
+    ctl.processGrippers(config_("grippersEnd"));
+  }
+  ctl_.getPostureTask("pepper")->stiffness(1.0);
   // Command text to play from speakers
   if(ctl.pepperHasSpeakers()){
     auto & speakers = ctl_.robot().device<mc_pepper::Speaker>("Speakers");

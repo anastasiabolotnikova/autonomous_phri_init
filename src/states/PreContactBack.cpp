@@ -37,6 +37,7 @@ void PreContactBack::start(mc_control::fsm::Controller & ctl_)
 
   // Set first goal as target
   ctl_.getPostureTask("pepper")->target(sequentialPostureGoals_[currentPostureGoal_]);
+  ctl_.getPostureTask("pepper")->stiffness(3.0);
   currentPostureGoalJoints_ = ctl.mapKeys(sequentialPostureGoals_[currentPostureGoal_]);
 
   mc_rtc::log::info("PreContactBack start done");
@@ -68,6 +69,7 @@ void PreContactBack::teardown(mc_control::fsm::Controller & ctl_)
 {
   // Remove added tasks
   ctl_.solver().removeTask(lookAtTarget_);
+  ctl_.getPostureTask("pepper")->stiffness(1.0);
   mc_rtc::log::info("PreContactBack teardown done");
 }
 

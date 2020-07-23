@@ -34,6 +34,7 @@ void PreContactHand::start(mc_control::fsm::Controller & ctl_)
   config_("armPosture", armPostureGoal_);
   // Set first goal as target
   ctl_.getPostureTask("pepper")->target(armPostureGoal_);
+  ctl_.getPostureTask("pepper")->stiffness(3.0);
   postureGoalJoints_ = ctl.mapKeys(armPostureGoal_);
 
   if(!config_.has("jointNearTargetDelta")){
@@ -72,6 +73,7 @@ void PreContactHand::teardown(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<PepperFSMController &>(ctl_);
   // Remove added tasks
   ctl_.solver().removeTask(lookAtTarget_);
+  ctl_.getPostureTask("pepper")->stiffness(1.0);
 
   // Command text to play from speakers
   if(ctl.pepperHasSpeakers()){
