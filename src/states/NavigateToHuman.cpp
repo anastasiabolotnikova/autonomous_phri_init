@@ -183,6 +183,19 @@ bool NavigateToHuman::run(mc_control::fsm::Controller & ctl_)
         // Data update
         markerXCamera_ = humanBodyMarkers_[pbvsRefFrame_];
         mobilebaseXCamera_ = ctl_.robot().X_b1_b2(ctl.camOpticalFrame(), "base_link");
+
+        // Correct markerXCamera_ rotation frame before computing targetXCamera_
+        sva::PTransformd markerXWorld = markerXCamera_ * cameraXWorld_;
+        Eigen::Vector3d markerX = markerXWorld.rotation().transpose().col(0);
+        Eigen::Vector3d worldZ = Eigen::Vector3d(0, 0, 1);
+        double humIncAng = v1v2Ang(markerX, worldZ); // TODO can still monitor if angle agrees with sitting straight assumption
+        if(humIncAng != 0.0){
+          // Correct marker frame inclination
+          Eigen::Quaterniond quat = Eigen::Quaterniond().setFromTwoVectors(markerX, worldZ);
+          markerXWorld = markerXWorld * sva::PTransformd(quat.inverse());
+          markerXCamera_.rotation() = (markerXWorld * cameraXWorld_.inv()).rotation();
+        }
+
         targetXCamera_ = targetXMarker_ * markerXCamera_;
         // Set orientation target to face the human
         targetXCamera_.rotation() = (mBaseRotTargetXWorld_ * cameraXWorld_.inv()).rotation();
