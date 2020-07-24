@@ -135,7 +135,7 @@ configs:
       completion:
         eval: 0.08
     targetXMarker:
-      translation: [0.0, 0.15, -0.45]
+      translation: [0.0, 0.17, -0.45]
       rotation: [3.14159, -1.570796, 0]
     visionLost: 0.5 #s
     ibvsTask:
@@ -174,7 +174,7 @@ configs:
       activeJoints:
         - HeadYaw
         - HeadPitch
-    timeOut: 10.0 #s
+    timeOut: 7.0 #s
     rightGripperOpening: 0.8
     monitorHeadOrientation: true
     headToTabletAngleThreshold: 1.0 #rad
@@ -246,6 +246,7 @@ configs:
     armPosture:
       RElbowYaw: [1.8]
       RWristYaw: [1.5]
+      RElbowRoll: [0.5]
     lookAtTarget:
       name: lookAtTarget
       type: lookAtSurface
@@ -332,8 +333,8 @@ configs:
 
 # Transitions map
 transitions:
-- [StandStraight, OK, Wait, Strict]
-- [Wait, OK, NavigateToHuman, Strict]
+- [StandStraight, OK, Wait, Auto]
+- [Wait, OK, NavigateToHuman, Auto]
 - [NavigateToHuman, OK, IntentCommunication, Auto]
 - [IntentCommunication, OK, PreContactBack, Auto]
 - [PreContactBack, OK, MakeContactBack, Auto]
