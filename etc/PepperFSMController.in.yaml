@@ -315,6 +315,12 @@ configs:
     textToSayStart: "You can now remove your hand from mine"
     textToSayEnd: "Thank you for your participation!"
 
+  MoveMobileBase:
+    sequentialTargets:
+      - translation: [-0.2, 0.0, 0.0]
+      - rotation: [0.0, 0.0, -1.0]
+    taskCompletion: 0.05
+
   # Empty state to test frame operations
   FrameTest:
     pelvisXWorld:
@@ -326,14 +332,17 @@ configs:
 
 # Transitions map
 transitions:
-- [StandStraight, OK, NavigateToHuman, Auto]
+- [StandStraight, OK, Wait, Strict]
+- [Wait, OK, NavigateToHuman, Strict]
 - [NavigateToHuman, OK, IntentCommunication, Auto]
 - [IntentCommunication, OK, PreContactBack, Auto]
 - [PreContactBack, OK, MakeContactBack, Auto]
 - [MakeContactBack, OK, PreContactHand, Auto]
 - [PreContactHand, OK, MakeContactHand, Auto]
 - [MakeContactHand, OK, RemoveContacts, Auto]
-- [RemoveContacts, OK, HalfSitting, Auto]
+- [RemoveContacts, OK, MoveMobileBase, Auto]
+- [MoveMobileBase, OK, Pause_5s, Auto]
+- [Pause_5s, OK, HalfSitting, Auto]
 
 # Initial state
 init: StandStraight

@@ -7,6 +7,7 @@ add_fsm_state_simple(MakeContactBack)
 add_fsm_state_simple(PreContactHand)
 add_fsm_state_simple(MakeContactHand)
 add_fsm_state_simple(RemoveContacts)
+add_fsm_state_simple(MoveMobileBase)
 
 add_fsm_data_directory(data)
 install(DIRECTORY models DESTINATION "${MC_STATES_INSTALL_PREFIX}" FILES_MATCHING REGEX ".*.model$")
