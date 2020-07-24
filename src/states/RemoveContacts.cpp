@@ -1,6 +1,7 @@
 #include "RemoveContacts.h"
 #include "../PepperFSMController.h"
 
+#include <mc_pepper/devices/VisualDisplay.h>
 #include <mc_pepper/devices/Speaker.h>
 #include <mc_tasks/MetaTaskLoader.h>
 
@@ -50,6 +51,12 @@ void RemoveContacts::start(mc_control::fsm::Controller & ctl_)
     speakers.say(textToSayStart_);
   }else{
     mc_rtc::log::warning("RemoveContacts start | Cannot say '{}'. Robot has no speakers", textToSayStart_);
+  }
+
+  // Reset tablet screen
+  if(ctl.pepperHasTablet()){
+    auto & tablet = ctl.robot().device<mc_pepper::VisualDisplay>("Tablet");
+    tablet.reset(true);
   }
 
   mc_rtc::log::info("RemoveContacts start done");
