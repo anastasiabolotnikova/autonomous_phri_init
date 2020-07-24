@@ -1,5 +1,5 @@
 <launch>
-  <arg name="tf_prefix"         default="" />               <!-- Prefix added to tf frame IDs. It typically contains a trailing '_' unless empty. -->
+  <arg name="tf_prefix"         default="kinect/" />               <!-- Prefix added to tf frame IDs. It typically contains a trailing '_' unless empty. -->
 
   <param name="robot_description"
     command="xacro $(find azure_kinect_ros_driver)/urdf/azure_kinect.urdf.xacro tf_prefix:=$(arg tf_prefix)" />
@@ -61,9 +61,9 @@
     <param name="body_index_map_publishing_enabled"           type="bool"   value="$(arg body_index_map_publishing_enabled)" />
   </node>
 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d roman2020_display.rviz" output="screen"/>
+  <!--<node name="rviz" pkg="rviz" type="rviz" args="-d roman2020_display.rviz" output="screen"/>-->
 
   <!-- 'Attach' real camera frame to the real robot model camera frame -->
-  <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 real/kinect_depth_optical_frame depth_optical_frame 100" />
+  <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 real/kinect_depth_optical_frame depth_camera_link 100" />
 
 </launch>
