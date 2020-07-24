@@ -317,8 +317,8 @@ configs:
 
   MoveMobileBase:
     sequentialTargets:
-      - translation: [-0.2, 0.0, 0.0]
-      - rotation: [0.0, 0.0, -1.0]
+      - translation: [-0.2, 0.0, 0.0] # move back
+      - rotation: [0.0, 0.0, -1.0] # turn right
     taskCompletion: 0.05
 
   # Empty state to test frame operations
