@@ -1,6 +1,6 @@
 # PepperFSMController_RO-MAN2020
 
-This repository contains an FSM `mc_rtc` controller used in the experiments presented in our work titled ["Autonomous Approach to Human Physical Assistance by a Humanoid"](https://hal.archives-ouvertes.fr/hal-02615390/document) accepted for presentation at [RO-MAN 2020](http://ro-man2020.unina.it/) conference:
+This repository contains an FSM `mc_rtc` controller used in the experiments presented in our work titled ["Autonomous Initiation of Human Physical Assistance by a Humanoid"](https://hal.archives-ouvertes.fr/hal-02615390/document) accepted for presentation at [RO-MAN 2020](http://ro-man2020.unina.it/) conference:
 
 ![PepperFSMController_RO-MAN2020](doc/pepperfsmcontroller-romna2020.png "PepperFSMController_RO-MAN2020")
 
@@ -8,7 +8,7 @@ This repository contains an FSM `mc_rtc` controller used in the experiments pres
 ```
 @inproceedings{bolotnikova2020roman,
   author = {Anastasia Bolotnikova and S{\'e}bastien Courtois and Abderrahmane Kheddar},
-  title = {Autonomous Approach to Human Physical Assistance by a Humanoid},
+  title = {Autonomous Initiation of Human Physical Assistance by a Humanoid},
   booktitle = {IEEE International Conference on Robot and Human Interactive Communication},
   address = {Naples, Italy},
   month = {31 August--4 September},
@@ -28,20 +28,21 @@ This repository is a fork of a base Pepper FSM `mc_rtc` controller [PepperFSMCon
 * [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/tutorials/introduction/installation-guide.html)
 * [`mc_pepper`](https://gite.lirmm.fr/multi-contact/mc_pepper)
 * [`Azure_Kinect_ROS_Driver`](https://github.com/microsoft/Azure_Kinect_ROS_Driver)
-* [`XGBoost`](https://github.com/dmlc/xgboost) 
+* [`XGBoost`](https://github.com/dmlc/xgboost)
   * Note: do system install (e.g. `set(CMAKE_INSTALL_PREFIX "/usr/local/")`) to enable CMake to `find_package(xgboost)`
 
 ## List of FSM states
 
+* StandStraight
 * NavigateToHuman
 * IntentCommunication
-* PreContactLeftHand
-* ContactLeftHand
-* PreContactRightHand
-* ContactRightHand
-* RemoveContactRightHand
+* PreContactBack
+* MakeContactBack
+* PreContactHand
+* MakeContactHand
+* RemoveContacts
 * RemoveContactLeftHand
-* EndPosture
+* MoveMobileBase
 
 ## Cloning , bilding and installing the controller
 
