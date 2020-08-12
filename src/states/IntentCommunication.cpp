@@ -135,17 +135,15 @@ bool IntentCommunication::run(mc_control::fsm::Controller & ctl_)
   lookAtTask_->target(humanHead_X_world.translation());
 
   // Check that human looked at the tablet at least once
-  if(!humanLookedAtTablet){
-    // Normalized vector from human head frame origin to robot tablet frame origin
-    head_to_tablet = ctl.robot().bodyPosW("tablet").translation() - humanHead_X_world.translation();
-    head_to_tablet.normalize();
-    // Angle between head_to_tablet and orientation of X axis of human head frame
-    head_to_tablet_angle = acos(head_to_tablet.dot(humanHead_X_world.rotation().row(0)));
-    if(head_to_tablet_angle < head_to_tablet_angle_threshold_ * M_PI/180){
-      humanLookedAtTablet =  true;
-      auto & speakers = ctl.robot().device<mc_pepper::Speaker>("Speakers");
-      speakers.say(textToSayEnd_);
-    }
+  // Normalized vector from human head frame origin to robot tablet frame origin
+  head_to_tablet = ctl.robot().bodyPosW("tablet").translation() - humanHead_X_world.translation();
+  head_to_tablet.normalize();
+  // Angle between head_to_tablet and orientation of X axis of human head frame
+  head_to_tablet_angle = acos(head_to_tablet.dot(humanHead_X_world.rotation().row(0)));
+  if(head_to_tablet_angle < head_to_tablet_angle_threshold_ * M_PI/180){
+    humanLookedAtTablet =  true;
+    auto & speakers = ctl.robot().device<mc_pepper::Speaker>("Speakers");
+    speakers.say(textToSayEnd_);
   }
 
   // Exit the state based on the timeout
