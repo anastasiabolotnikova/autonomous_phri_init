@@ -131,8 +131,8 @@ pepper:
 
 human:
   posture:
-     stiffness: 10
-     weight: 100
+     stiffness: 1
+     weight: 10
      target:
        LArm_0: [-1.3]
        LElbow: [0.2]
@@ -242,9 +242,51 @@ configs:
       rotation: [0.0, 0.0, 1.3]
       translation: [0.1, -0.4, 0.0]
 
+  IntentCommunication:
+    rightHandPointing:
+      RShoulderPitch: [1.0]
+      RShoulderRoll: [-0.85]
+      RElbowYaw: [0.5]
+      RElbowRoll: [1.56]
+      RWristYaw: [1.8]
+    finalHandPosition:
+      RShoulderPitch: [1.57]
+      RShoulderRoll: [-0.17]
+      RElbowYaw: [1.22]
+      RElbowRoll: [0.52]
+      RWristYaw: [0.0]
+    lookAtTask:
+      name: camOrientation
+      type: lookAt
+      robot: pepper
+      weight: 5.0
+      stiffness: 2.0
+      body: CameraTop_optical_frame
+      bodyVector: [0.0, 0.0, 1.0]
+      activeJoints:
+        - HeadYaw
+        - HeadPitch
+    timeOut: 10.0
+    imageToDisplay: backContactPlan.png
+    textToSayStart: 'Hello. My name is Pepper. I am here to help. Please look at my screen to see my plan.'
+    textToSayEnd: 'I will now carefully touch your back as is shown on my screen. Are you ready?'
+    lookAtTaskHuman:
+      type: lookAt
+      robot: human
+      weight: 5.0
+      stiffness: 2.0
+      body: HeadLink
+      bodyVector: [1.0, 0.0, 0.0]
+      activeJoints:
+        - Head_0
+        - Head_1
+        - Head_2
+    head_to_tablet_angle_threshold: 60 # deg
+
 # Transitions map
 transitions:
 - [StandStraight, OK, NavigateToHuman, Strict]
+- [NavigateToHuman, OK, IntentCommunication, Strict]
 
 # Initial state
 init: StandStraight
