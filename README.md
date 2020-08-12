@@ -83,4 +83,10 @@ Once `RViz` node is started, configure it by clicking in `RViz` `File -> Open Co
 
 Optionally, you can configure `RViz` to use [`roman2020_display.rviz`](launch/roman2020_display.rviz) configuration automatically when running `roslaunch launch/display.launch` by adding it to your ROS path:
 
-```cp launch/roman2020_display.rviz ~/.ros/```
+```
+cp launch/roman2020_display.rviz ~/.ros/
+```
+
+# Acknowledgment
+
+Thanks to @gergondet and @atanguy for reviewing and helping with this controller and the [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/) framework
