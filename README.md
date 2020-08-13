@@ -1,6 +1,6 @@
-# PepperFSMController_RO-MAN2020
+# Autonomous Initiation of Human Physical Assistance by a Humanoid
 
-This repository contains an FSM `mc_rtc` controller used in the experiments presented in our work titled ["Autonomous Initiation of Human Physical Assistance by a Humanoid"](https://hal.archives-ouvertes.fr/hal-02615390/document) accepted for presentation at [RO-MAN 2020](http://ro-man2020.unina.it/) conference
+This repository contains the Finite State Machine (FSM) [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/) controller used in the experiments presented in our work titled ["Autonomous Initiation of Human Physical Assistance by a Humanoid"](https://hal.archives-ouvertes.fr/hal-02615390/document) published in [RO-MAN 2020](http://ro-man2020.unina.it/) conference proceedings
 
 ---
 
@@ -15,7 +15,11 @@ On this branch we present a simulation of the controller for pHRI experiment usi
 
 ---
 
-## BibTeX
+
+### Author, Contact, BibTeX
+
+Anastasia Bolotnikova (a.bolotnikova[at]softbankrobotics.com)
+
 ```
 @inproceedings{bolotnikova2020roman,
   author = {Anastasia Bolotnikova and S{\'e}bastien Courtois and Abderrahmane Kheddar},
@@ -26,6 +30,7 @@ On this branch we present a simulation of the controller for pHRI experiment usi
   year = {2020}
 }
 ```
+
 
 ## Branches
 
@@ -50,8 +55,8 @@ This repository is a fork of a base Pepper FSM `mc_rtc` controller [PepperFSMCon
 * MakeContactBack
 * PreContactHand
 * MakeContactHand
+* RemoveContactHuman
 * RemoveContacts
-* RemoveContactLeftHand
 * MoveMobileBase
 
 ## Cloning , bilding and installing the controller
