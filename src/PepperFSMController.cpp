@@ -190,5 +190,35 @@ void PepperFSMController::reset(const mc_control::ControllerResetData & reset_da
 
   logger().addLogEntry(
     "Human_Torques", [getHumanTau]() -> const std::vector<double> & { return getHumanTau(); });
+}
 
+void PepperFSMController::processGrippers(const mc_rtc::Configuration &gripper_config){
+  auto & ctl_grippers = robot().grippersByName();
+  for(const auto & gname : gripper_config.keys()){
+    if(ctl_grippers.count(gname) != 0){
+      double gval = gripper_config(gname);
+      if(gval>= 0 && gval <=1){
+        robot().gripper(gname).setTargetOpening(gval);
+      }
+    }
+  }
+}
+
+bool PepperFSMController::jointsNearTarget(std::string robotName, std::vector<std::string> jointNames, double delta){
+  bool result = true;
+  for (size_t i = 0; i < jointNames.size(); i++) {
+    unsigned int jointIndex = robots().robot(robotName).jointIndexByName(jointNames[i]);
+    if(std::abs(getPostureTask(robotName)->posture()[jointIndex][0] - robots().robot(robotName).mbc().q[jointIndex][0]) > delta){
+      result = false;
+    }
+  }
+  return result;
+}
+
+std::vector<std::string> PepperFSMController::mapKeys(std::map<std::string, std::vector<double>> const& map) {
+  std::vector<std::string> keys;
+  for (auto const& element : map) {
+    keys.push_back(element.first);
+  }
+  return keys;
 }

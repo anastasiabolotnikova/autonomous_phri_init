@@ -30,6 +30,11 @@ struct PepperFSMController_DLLAPI PepperFSMController : public mc_control::fsm::
     std::string tabletDeviceName() { return tabletDeviceName_; }
     std::vector<std::string> bumperSensorNames() { return bumperSensorNames_; }
 
+    void processGrippers(const mc_rtc::Configuration &gripper_config);
+
+    bool jointsNearTarget(std::string robotName, std::vector<std::string> jointNames, double delta);
+    std::vector<std::string> mapKeys(std::map<std::string, std::vector<double>> const& map);
+
 private:
     // Controller configuration
     mc_rtc::Configuration config_;
