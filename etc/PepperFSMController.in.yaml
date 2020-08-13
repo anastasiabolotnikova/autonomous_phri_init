@@ -69,6 +69,11 @@ collisions:
       iDist: 0.05
       sDist: 0.01
       damping: 0
+    - body1: torso
+      body2: RForearmLink
+      iDist: 0.05
+      sDist: 0.01
+      damping: 0
 - type: collision
   r1: pepper
   r2: chair
@@ -95,6 +100,11 @@ collisions:
       damping: 0
     - body1: l_wrist
       body2: right_handle
+      iDist: 0.05
+      sDist: 0.01
+      damping: 0
+    - body1: l_wrist
+      body2: back_support
       iDist: 0.05
       sDist: 0.01
       damping: 0
@@ -170,7 +180,7 @@ states:
             - eval: 1e-3
       lookAtHandTarget:
         type: lookAtSurface
-        body: CameraTop_optical_frame
+        body: kinect_depth_optical_frame
         bodyVector: [0.0, 0.0, 1.0]
         surface: MobileBase
         offset:
@@ -196,7 +206,7 @@ states:
             - eval: 1e-3
       lookAtHandTarget:
         type: lookAtSurface
-        body: CameraTop_optical_frame
+        body: kinect_depth_optical_frame
         bodyVector: [0.0, 0.0, 1.0]
         surface: MobileBase
         offset:
@@ -213,6 +223,99 @@ states:
       - HandTaskStateLeft
       - HandTaskStateRight
 
+  MakeContactBack:
+    base: MetaTasks
+    tasks:
+      LeftHandSurfaceTask:
+        type: surfaceTransform
+        weight: 300.0
+        stiffness: 3.0
+        surface: LeftForearm
+        targetSurface:
+          robot: human
+          surface: Back
+          offset_translation: [0.05, 0.15, -0.01]
+          offset_rotation: [3.14, 0.0, -1.57]
+        dimWeight: [1.0, 1.0, 0.5, 1.0, 1.0, 1.0]
+        completion:
+          eval: 0.075
+    AddContactsAfter:
+      - r1: pepper
+        r2: human
+        r1Surface: LeftForearm
+        r2Surface: Back
+
+  MakeContactHand:
+    base: MetaTasks
+    tasks:
+      HumanHandTask:
+        type: bspline_trajectory
+        robot: human
+        surface: RightHand
+        weight: 100.0
+        stiffness: 30.0
+        duration: 7.0
+        dimWeight: [1.0, 1.0, 0.0, 1.0, 1.0, 1.0]
+        displaySamples: 10
+        completion:
+          OR:
+            - eval: 0.09
+            - AND:
+              - timeout: 1.5
+              - speed: 1e-2
+        targetSurface:
+          robot: pepper
+          surface: RightForearm
+          translation: [0.13, 0.0, 0.07]
+          rotation: [3.14, 0.0, 0.0]
+          controlPoints:
+          [
+            [0.4, 0.0, 0.15]
+          ]
+    AddContactsAfter:
+      - r1: pepper
+        r2: human
+        r1Surface: RightForearm
+        r2Surface: RightHand
+
+  RemoveContactHuman:
+    base: MetaTasks
+    RemoveContacts:
+      - r1: pepper
+        r2: human
+        r1Surface: RightForearm
+        r2Surface: RightHand
+    RemoveContactsAfter:
+      - r1: pepper
+        r2: human
+        r1Surface: LeftForearm
+        r2Surface: Back
+    tasks:
+      HumanHandTask:
+        type: bspline_trajectory
+        robot: human
+        surface: RightHand
+        weight: 100.0
+        stiffness: 30.0
+        duration: 7.0
+        dimWeight: [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
+        displaySamples: 10
+        completion:
+          OR:
+            - eval: 0.09
+            - AND:
+              - timeout: 1.5
+              - speed: 1e-2
+        targetSurface:
+          robot: pepper
+          surface: RightForearm
+          translation: [0.2, -0.1, 0.1]
+          rotation: [3.14, 0.0, 0.0]
+          controlPoints:
+          [
+            [0.2, 0.0, -0.03]
+          ]
+
 ### Configurations of states defined in c++ ###
 configs:
   StandStraight:
@@ -222,7 +325,7 @@ configs:
     # Image based camera orientation task
     ibvsTask:
       type: gaze
-      body: CameraTop_optical_frame
+      body: kinect_depth_optical_frame
       weight: 1.0
       stiffness: 3.0
       activeJoints:
@@ -261,12 +364,12 @@ configs:
       robot: pepper
       weight: 5.0
       stiffness: 2.0
-      body: CameraTop_optical_frame
+      body: kinect_depth_optical_frame
       bodyVector: [0.0, 0.0, 1.0]
       activeJoints:
         - HeadYaw
         - HeadPitch
-    timeOut: 10.0
+    timeOut: 7.0
     imageToDisplay: backContactPlan.png
     textToSayStart: 'Hello. My name is Pepper. I am here to help. Please look at my screen to see my plan.'
     textToSayEnd: 'I will now carefully touch your back as is shown on my screen. Are you ready?'
@@ -283,10 +386,103 @@ configs:
         - Head_2
     head_to_tablet_angle_threshold: 60 # deg
 
+  PreContactBack:
+    grippers:
+      l_gripper: 1.0
+    sequentialPostureGoals:
+      - LShoulderRoll: [1.0]
+        LElbowRoll: [-0.3]
+        LWristYaw: [-0.6]
+        RShoulderPitch: [1.57]
+        RShoulderRoll: [-0.17]
+        RElbowYaw: [1.22]
+        RElbowRoll: [0.1]
+        RWristYaw: [0.0]
+      - LShoulderPitch: [0.3]
+    jointNearTargetDelta: 0.05
+    lookAtTarget:
+      name: lookAtTarget
+      type: lookAtSurface
+      body: kinect_depth_optical_frame
+      bodyVector: [0.0, 0.0, 1.0]
+      surface: MobileBase
+      offset:
+        translation: [0.2, 0.4, 0.8]
+      weight: 10.0
+      stiffness: 1.0
+      activeJoints:
+        - HeadYaw
+        - HeadPitch
+
+  PreContactHand:
+    grippers:
+      r_gripper: 1.0
+    armPosture:
+      RShoulderPitch: [0.7]
+      RShoulderRoll: [-0.1]
+      RElbowYaw: [1.45]
+      RElbowRoll: [0.4]
+      RWristYaw: [1.5]
+    lookAtTarget:
+      name: lookAtTarget
+      type: lookAtSurface
+      body: kinect_depth_optical_frame
+      bodyVector: [0.0, 0.0, 1.0]
+      surface: MobileBase
+      offset:
+        translation: [0.2, -0.4, 0.4]
+      weight: 30.0
+      stiffness: 3.0
+      activeJoints:
+        - HeadYaw
+        - HeadPitch
+    textToSay: "Now, please give me your hand as is shown on my screen"
+    imageToDisplay: handContactPlan.png
+
+  RemoveContacts:
+    sequentialPostureGoals:
+      - RElbowRoll: [0.1]
+      - RShoulderPitch: [1.57]
+        RShoulderRoll: [-0.3]
+        RElbowYaw: [1.22]
+        RElbowRoll: [0.52]
+        RWristYaw: [0.0]
+      - LShoulderRoll: [1.5]
+        LShoulderPitch: [1.57]
+        LElbowRoll: [-0.1]
+        HeadYaw: [0.25]
+        HeadPitch: [0]
+      - LShoulderPitch: [1.57]
+        LShoulderRoll: [0.17]
+        LElbowRoll: [-0.1]
+        LWristYaw: [0.0]
+    grippersEnd:
+      l_gripper: 0.7
+      r_gripper: 0.7
+    textToSayStart: "You can now remove your hand from mine"
+    textToSayEnd: "Thank you for your participation!"
+
+  MoveMobileBase:
+    sequentialTargets:
+      - translation: [-0.2, 0.0, 0.0] # move back
+      - rotation: [0.0, 0.0, -1.0] # turn right
+    taskCompletion: 0.05
+
+
 # Transitions map
 transitions:
 - [StandStraight, OK, NavigateToHuman, Strict]
 - [NavigateToHuman, OK, IntentCommunication, Strict]
+- [IntentCommunication, OK, PreContactBack, Strict]
+- [PreContactBack, OK, MakeContactBack, Strict]
+- [MakeContactBack, OK, PreContactHand, Strict]
+- [PreContactHand, OK, MakeContactHand, Strict]
+- [MakeContactHand, OK, RemoveContactHuman, Strict]
+- [RemoveContactHuman, OK, RemoveContacts, Strict]
+- [RemoveContacts, OK, MoveMobileBase, Auto]
+- [MoveMobileBase, OK, Pause_5s, Auto]
+- [Pause_5s, OK, HalfSitting, Auto]
+
 
 # Initial state
 init: StandStraight
@@ -336,4 +532,4 @@ comTask:
 comPlot: true
 
 # Name of the camera optical frame (in URDF)
-camOpticalFrame: CameraTop_optical_frame
+camOpticalFrame: kinect_depth_optical_frame
