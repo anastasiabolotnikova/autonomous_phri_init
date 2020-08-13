@@ -45,7 +45,6 @@ This repository is a fork of a base Pepper FSM `mc_rtc` controller [PepperFSMCon
 * PreContactHand
 * MakeContactHand
 * RemoveContacts
-* RemoveContactLeftHand
 * MoveMobileBase
 
 ## Cloning , bilding and installing the controller
