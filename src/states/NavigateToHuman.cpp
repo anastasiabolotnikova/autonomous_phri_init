@@ -298,68 +298,66 @@ void NavigateToHuman::updateVisualMarkerPose(const visualization_msgs::MarkerArr
                                                           m.pose.position.y,
                                                           m.pose.position.z));
   }
-  if(humanBodyMarkers_.size() == 0){
-    mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | Got array of 0 markers from Azure");
+  if(humanBodyMarkers_.size() != 0){
+    if(!firstROSUpdateDone_){
+      // Indicate that data was received at least once
+      firstROSUpdateDone_ = true;
+      // Check if PBVS frame exists
+      if(humanBodyMarkers_.find(pbvsRefFrame_) == humanBodyMarkers_.end()){
+        mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | Body frame for PBVS {} not found", pbvsRefFrame_);
+      }
+      // Human pelvis frame wrt world frame
+      sva::PTransformd pelvisXCamera = humanBodyMarkers_[pbvsRefFrame_];
+      sva::PTransformd pelvisXWorld = pelvisXCamera * cameraXWorld_;
+
+      // Check if human pelvis frame inclination angle agrees with sitting straight assumption
+      double maxHumanIncAng = 35.0; // deg
+      if(!config_.has("maxHumanIncAng")){
+        mc_rtc::log::warning("NavigateToHuman updateVisualMarkerPose | maxHumanIncAng config entry missing. Using default value: {}", maxHumanIncAng);
+      }
+      config_("maxHumanIncAng", maxHumanIncAng);
+      Eigen::Vector3d pelvisX = pelvisXWorld.rotation().transpose().col(0);
+      Eigen::Vector3d worldZ = Eigen::Vector3d(0, 0, 1);
+      double humIncAng = v1v2Ang(pelvisX, worldZ);
+      if(humIncAng > maxHumanIncAng){
+        mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | invalid initial detected human inclination");
+      }else{
+        mc_rtc::log::success("NavigateToHuman updateVisualMarkerPose | human inclination OK: {}deg", humIncAng);
+      }
+      // Inclination check passed
+      if(humIncAng != 0.0){
+        // Correct pelvis frame inclination
+        Eigen::Quaterniond quat = Eigen::Quaterniond().setFromTwoVectors(pelvisX, worldZ);
+        pelvisXWorld = pelvisXWorld * sva::PTransformd(quat.inverse());
+      }
+      // Compute mobile base orientation target in world frame
+      mBaseRotTargetXWorld_ = sva::PTransformd((targetXMarker_ * pelvisXWorld).rotation());
+      Eigen::Vector3d rpyToCheck = mc_rbdyn::rpyFromMat(mBaseRotTargetXWorld_.rotation());
+      if(rpyToCheck(0) > 1e-3 || rpyToCheck(1) > 1e-3){
+        mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | mBaseRotTargetXWorld RPY check failed: {}",
+                                                                                  rpyToCheck.transpose());
+      }
+
+      // Calculate human upper back distance from the ground
+      if(humanBodyMarkers_.find(chestFrame_) == humanBodyMarkers_.end()){
+        mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | chestFrame {} not found", chestFrame_);
+      }
+      if(humanBodyMarkers_.find(neckFrame_) == humanBodyMarkers_.end()){
+        mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | neckFrame {} not found", neckFrame_);
+      }
+      sva::PTransformd chestXWorld = humanBodyMarkers_[chestFrame_] * cameraXWorld_;
+      sva::PTransformd neckXWorld = humanBodyMarkers_[neckFrame_] * cameraXWorld_;
+      if(chestXWorld.translation()(2) >= neckXWorld.translation()(2)){
+        mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | human detection failure: chest height ({}m) above or equal to neck ({}m)",
+                                                                                                   chestXWorld.translation()(2), neckXWorld.translation()(2));
+      }
+      humanUpperBackLevel_ = (chestXWorld.translation()(2) + neckXWorld.translation()(2)) / 2;
+      mc_rtc::log::info("NavigateToHuman updateVisualMarkerPose | detectedhuman upper back level from the ground: {}m",
+                                                                                        humanUpperBackLevel_);
+    }
+    // Indicate that new data was received
+    newROSData_ = true;
   }
-
-  // Indicate that data was received at least once
-  if(!firstROSUpdateDone_){
-    firstROSUpdateDone_ = true;
-    // Check if PBVS frame exists
-    if(humanBodyMarkers_.find(pbvsRefFrame_) == humanBodyMarkers_.end()){
-      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | Body frame for PBVS {} not found", pbvsRefFrame_);
-    }
-    // Human pelvis frame wrt world frame
-    sva::PTransformd pelvisXCamera = humanBodyMarkers_[pbvsRefFrame_];
-    sva::PTransformd pelvisXWorld = pelvisXCamera * cameraXWorld_;
-
-    // Check if human pelvis frame inclination angle agrees with sitting straight assumption
-    double maxHumanIncAng = 35.0; // deg
-    if(!config_.has("maxHumanIncAng")){
-      mc_rtc::log::warning("NavigateToHuman updateVisualMarkerPose | maxHumanIncAng config entry missing. Using default value: {}", maxHumanIncAng);
-    }
-    config_("maxHumanIncAng", maxHumanIncAng);
-    Eigen::Vector3d pelvisX = pelvisXWorld.rotation().transpose().col(0);
-    Eigen::Vector3d worldZ = Eigen::Vector3d(0, 0, 1);
-    double humIncAng = v1v2Ang(pelvisX, worldZ);
-    if(humIncAng > maxHumanIncAng){
-      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | invalid initial detected human inclination");
-    }else{
-      mc_rtc::log::success("NavigateToHuman updateVisualMarkerPose | human inclination OK: {}deg", humIncAng);
-    }
-    // Inclination check passed
-    if(humIncAng != 0.0){
-      // Correct pelvis frame inclination
-      Eigen::Quaterniond quat = Eigen::Quaterniond().setFromTwoVectors(pelvisX, worldZ);
-      pelvisXWorld = pelvisXWorld * sva::PTransformd(quat.inverse());
-    }
-    // Compute mobile base orientation target in world frame
-    mBaseRotTargetXWorld_ = sva::PTransformd((targetXMarker_ * pelvisXWorld).rotation());
-    Eigen::Vector3d rpyToCheck = mc_rbdyn::rpyFromMat(mBaseRotTargetXWorld_.rotation());
-    if(rpyToCheck(0) > 1e-3 || rpyToCheck(1) > 1e-3){
-      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | mBaseRotTargetXWorld RPY check failed: {}",
-                                                                                rpyToCheck.transpose());
-    }
-
-    // Calculate human upper back distance from the ground
-    if(humanBodyMarkers_.find(chestFrame_) == humanBodyMarkers_.end()){
-      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | chestFrame {} not found", chestFrame_);
-    }
-    if(humanBodyMarkers_.find(neckFrame_) == humanBodyMarkers_.end()){
-      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | neckFrame {} not found", neckFrame_);
-    }
-    sva::PTransformd chestXWorld = humanBodyMarkers_[chestFrame_] * cameraXWorld_;
-    sva::PTransformd neckXWorld = humanBodyMarkers_[neckFrame_] * cameraXWorld_;
-    if(chestXWorld.translation()(2) >= neckXWorld.translation()(2)){
-      mc_rtc::log::error_and_throw<std::runtime_error>("NavigateToHuman updateVisualMarkerPose | human detection failure: chest height ({}m) above or equal to neck ({}m)",
-                                                                                                 chestXWorld.translation()(2), neckXWorld.translation()(2));
-    }
-    humanUpperBackLevel_ = (chestXWorld.translation()(2) + neckXWorld.translation()(2)) / 2;
-    mc_rtc::log::info("NavigateToHuman updateVisualMarkerPose | detectedhuman upper back level from the ground: {}m",
-                                                                                      humanUpperBackLevel_);
-  }
-  // Indicate that new data was received
-  newROSData_ = true;
 }
 
 double NavigateToHuman::v1v2Ang(Eigen::Vector3d v1, Eigen::Vector3d v2){
