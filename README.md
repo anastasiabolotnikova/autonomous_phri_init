@@ -1,5 +1,7 @@
 # Autonomous Initiation of Human Physical Assistance by a Humanoid
 
+[![License](https://img.shields.io/badge/License-BSD%202--Clause-green.svg)](https://opensource.org/licenses/BSD-2-Clause)
+
 This repository contains the Finite State Machine (FSM) [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/) controller used in the experiments presented in our work titled ["Autonomous Initiation of Human Physical Assistance by a Humanoid"](https://hal.archives-ouvertes.fr/hal-02615390/document) published in [RO-MAN 2020](http://ro-man2020.unina.it/) conference proceedings
 
 [![Experiment](http://img.youtube.com/vi/vDmEc1aBODA/0.jpg)](http://www.youtube.com/watch?v=vDmEc1aBODA "Autonomous Initiation of Human Physical Assistance by a Humanoid")
@@ -92,4 +94,4 @@ cp launch/roman2020_display.rviz ~/.ros/
 
 # Acknowledgment
 
-Thanks to @gergondet and @atanguy for reviewing and helping with this controller and the [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/) framework
+Thanks to [@gergondet](https://github.com/gergondet) and [@arntanguy](https://github.com/arntanguy) for reviewing and helping with this controller and the [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/) framework
