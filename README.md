@@ -25,14 +25,14 @@ Anastasia Bolotnikova (a.bolotnikova[at]softbankrobotics.com)
 ## Branches
 
 * `master` - controller for real experiment using [Azure Kinect Body Tracking](https://docs.microsoft.com/en-us/azure/kinect-dk/body-sdk-download) visual feedback for navigation towards a person, and contact detection (DOI: [10.1109/ROMAN.2018.8525774](https://ieeexplore.ieee.org/abstract/document/8525774), [10.1109/HUMANOIDS.2018.8624946](https://ieeexplore.ieee.org/abstract/document/8624946)) for establishing contacts with human in closed loop
-* `topic/withHumanModel` - controller for experiment simulation with a [human model](https://gite.lirmm.fr/nana/mc_human)
+* `topic/withHumanModel` - controller for experiment simulation with a [human model](https://github.com/jrl-umi3218/mc_human)
 
-This repository is a fork of a base Pepper FSM `mc_rtc` controller [PepperFSMController](https://gite.lirmm.fr/mc-controllers/pepperfsmcontroller).
+This repository is a fork of a base Pepper FSM `mc_rtc` controller [PepperFSMController](https://github.com/jrl-umi3218/pepper-fsm-controller).
 
 ## Required packages
 
 * [`mc_rtc`](https://jrl-umi3218.github.io/mc_rtc/tutorials/introduction/installation-guide.html)
-* [`mc_pepper`](https://gite.lirmm.fr/multi-contact/mc_pepper)
+* [`mc_pepper`](https://github.com/jrl-umi3218/mc_pepper)
 * [`Azure_Kinect_ROS_Driver`](https://github.com/microsoft/Azure_Kinect_ROS_Driver)
 * [`XGBoost`](https://github.com/dmlc/xgboost)
   * Note: do system install (e.g. `set(CMAKE_INSTALL_PREFIX "/usr/local/")`) to enable CMake to `find_package(xgboost)`
@@ -52,7 +52,7 @@ This repository is a fork of a base Pepper FSM `mc_rtc` controller [PepperFSMCon
 ## Cloning , bilding and installing the controller
 
 ```bash
-git clone git@gite.lirmm.fr:nana/pepperfsmcontroller-roman2020.git
+git clone git@github.com:anastasiabolotnikova/autonomous_phri_init.git
 cd pepperfsmcontroller-roman2020
 mkdir build
 cd build
@@ -66,7 +66,7 @@ sudo make install
 Use your preferred interface to run this controller. Some option are:
 
 * [`mc_rtc_ticker`](https://github.com/jrl-umi3218/mc_rtc_ros/tree/master/mc_rtc_ticker) from [`mc_rtc_ros`](https://github.com/jrl-umi3218/mc_rtc_ros) (simulation only)
-* [`mc_naoqi`](https://gite.lirmm.fr/multi-contact/mc_naoqi) (for experiments with real robot)
+* [`mc_naoqi`](https://github.com/jrl-umi3218/mc_naoqi) (for experiments with real robot)
 
 To run this controller, make sure to setup correctly following interface configuration entries:
 
