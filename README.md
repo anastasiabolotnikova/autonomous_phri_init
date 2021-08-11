@@ -8,7 +8,7 @@ This repository contains the Finite State Machine (FSM) [`mc_rtc`](https://jrl-u
 
 ### Author, Contact, BibTeX
 
-Anastasia Bolotnikova (a.bolotnikova[at]softbankrobotics.com)
+Anastasia Bolotnikova (anastasia.bolotnikova[at]epfl.ch)
 
 
 ```
